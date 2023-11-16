@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
-import { ElButton } from 'element-plus'
 import OpenAI from 'openai'
 import MarkdownIt from 'markdown-it'
 import VueGravatar from 'vue-gravatar'

@@ -19,7 +19,7 @@
     "@vitejs/plugin-vue": "^1.6.0",
     "@vue/compiler-sfc": "^3.2.6",
     "consola": "^3.2.3",
-    "vite": "^2.5.2",
+    "vite": "^2.9.16",
     "vite-plugin-style-import": "^1.4.1"
   }
 }
