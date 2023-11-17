@@ -204,7 +204,7 @@ function generateUniqueConversationId() {
 
 async function callOpenAI() {
   // const apiKey:string = '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';
-  const apiKey:string = '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';
+  const apiKey:string = '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';
   const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
   console.log("user input is ", inputQuestion.value)
