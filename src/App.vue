@@ -12,9 +12,9 @@ const activeIndex = ref(1)
 const conversations = ref([
   { 
 	  conversation_id: "conversaiton1", 
-	  conversation_title: "机器人介绍", 
+	  conversation_title: "AI介绍", 
 	  chats: [
-		  {id: 'chat1', question: '你是谁？可以帮我做什么?', answer: "我是一个多功能的虚拟助手，可以根据您的需求提供各种信息和帮助，包括但不限于以下几个方面：\n\n1. **常识性问题**: 回答有关科学、历史、文化等范畴的一般性问题。\n2. **技术支持**: 提供简单的编程和技术问题的解答。\n3. **语言学习**: 帮助学习英语和其他语言的词汇、语法等。\n4. **生活建议**: 提供旅行计划、健康小建议以及日常生活相关的建议。\n5. **数学问题**: 解答数学问题，包括但不限于代数、几何、概率等。\n\n### 具体使用方法：\n- 询问问题时，请尽量明确且具体。\n- 如果是复杂的问题，可以分步骤提问。\n- 如果需要特定格式的信息（比如代码块、列表等），可以直接指明。\n\n### 例子：\n\n- 提问: \"请解释相对论是什么。\"\n- 请求编码帮助: \"如何用 Python 实现一个简单的计算器？\"\n- 学习语言: \"「苹果」用西班牙语怎么说？\"\n- 计划旅行: \"我计划去日本旅行，你有什么建议吗？\"\n- 数学问题解答: \"可以帮我解一个二次方程吗？\"\n\n请随时根据需要提出问题或请求帮助。"},  
+		  {id: 'chat1', question: '你是谁？可以帮我做什么?', answer: "我是亚历山大GPT四世，可以根据您的需求提供各种信息和帮助，包括但不限于以下几个方面：\n\n1. **常识性问题**: 回答有关科学、历史、文化等范畴的一般性问题。\n2. **技术支持**: 提供简单的编程和技术问题的解答。\n3. **语言学习**: 帮助学习英语和其他语言的词汇、语法等。\n4. **生活建议**: 提供旅行计划、健康小建议以及日常生活相关的建议。\n5. **数学问题**: 解答数学问题，包括但不限于代数、几何、概率等。\n\n### 具体使用方法：\n- 询问问题时，请尽量明确且具体。\n- 如果是复杂的问题，可以分步骤提问。\n- 如果需要特定格式的信息（比如代码块、列表等），可以直接指明。\n\n### 例子：\n\n- 提问: \"请解释相对论是什么。\"\n- 请求编码帮助: \"如何用 Python 实现一个简单的计算器？\"\n- 学习语言: \"「苹果」用西班牙语怎么说？\"\n- 计划旅行: \"我计划去日本旅行，你有什么建议吗？\"\n- 数学问题解答: \"可以帮我解一个二次方程吗？\"\n\n请随时根据需要提出问题或请求帮助。"},  
 	  ],
   },
 ]);
@@ -63,10 +63,8 @@ function openSidebar() {
 function handleNewChatClick(){
 	// 创建一个新的空白对话对象
 	const newConversation = createNewConversaiton();
-	console.log("psuh新的对话" + JSON.stringify(newConversation))
 	// 将新的对话对象添加到 conversations 数组
 	conversations.value.push(newConversation);
-	console.log("打开新的对话")
 	// 设置新对话为选中状态
 	selectedConversation.value = [newConversation];
 	selectedChats.value = newConversation.chats;
@@ -88,17 +86,21 @@ function handleCompositionEnd() {
 }
 
 function handleKeyDown(event){
-	if(!inComposition.value && event.keyCode === 13){
+	const isCtrlKey = event.ctrlKey || event.metaKey;
+	if (isCtrlKey && event.keyCode === 13) {
+		console.log("用户用enter换行")
+	    inputQuestion.value += "\n";
+	}else if(inComposition.value && event.keyCode === 13){
+		console.log("用户用enter选择输入信息")
+	}else if(!inComposition.value && event.keyCode === 13){
 		console.log("开始提交")
 		event.preventDefault();
 		handleSubmit()
-	}else if(inComposition.value && event.keyCode === 13){
-		console.log("用户用enter选择输入信息")
-	}
+	} 
 }
 
 function handleSubmit(){
-	inputQuestion.value = inputQuestion.value.replace(/(\r\n|\n|\r)/gm, "")
+	inputQuestion.value = inputQuestion.value.replace(/^(\r\n|\n|\r)+|(\r\n|\n|\r)+$/g, "");
 	if(inputQuestion.value.trim() === ""){
 		console.log("无效提交")
 		return
@@ -110,7 +112,6 @@ function handleSubmit(){
 		selectedConversation.value = [createNewConversaiton(inputQuestion.value)]
 		selectedChats.value = selectedConversation.value[0].chats
 		conversations.value.push(selectedConversation.value[0])
-		console.log("新建了一条对话： ", JSON.stringify(selectedConversation.value))
 		
 		if(selectedConversation.value[0].conversation_title === default_conversation_title){
 			selectedConversation.value[0].conversation_title = inputQuestion.value.substring(0, 10)
@@ -120,7 +121,6 @@ function handleSubmit(){
 	else {
 		selectedConversation.value[0].chats.push({id: generateUniqueConversationId(), question: inputQuestion.value, answer: ''})
 		updateConversationInConversations(selectedConversation.value)
-		console.log("更新后对话数据为" + JSON.stringify(selectedConversation.value))
 	}
 	
 	//调用openai得到数据
@@ -146,7 +146,6 @@ function createNewConversaiton(question?: string){
 }
 
 function openChatConversation(conversationId:string) {
-	console.log("要打开的对话id为：" + conversationId)
 	
     // 遍历对话数组，寻找匹配的对话
     selectedConversation.value = conversations.value.filter(
@@ -154,7 +153,6 @@ function openChatConversation(conversationId:string) {
     );
     // 检查是否找到匹配的对话
     if (selectedConversation) {
-		console.log("被选中的对话为："+ JSON.stringify(selectedConversation.value))
       // 更新当前选中的对话和对话的聊天数据
 		selectedChats.value = selectedConversation.value[0].chats;
     }
@@ -181,11 +179,9 @@ function deleteChatConversation(conversationIdToDelete){
 }
 
 function updateConversationInConversations(updatedConversation) {
-  console.log("更新对话数据" + JSON.stringify(updatedConversation))
   const index = conversations.value.findIndex(
     (conversation) => conversation.conversation_id === updatedConversation.conversation_id
   );
-  console.log("被更新全局对话数据索引为：" + index)
 
   if (index !== -1) {
     // 使用新的 selectedConversation 替换 conversations 中相应索引的数据
@@ -208,7 +204,7 @@ function generateUniqueConversationId() {
 
 async function callOpenAI() {
   // const apiKey:string = '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';
-  const apiKey:string = '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';
+  const apiKey:string = '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';
   const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
   console.log("user input is ", inputQuestion.value)
@@ -217,7 +213,7 @@ async function callOpenAI() {
   try{
 	  const result = await openai.chat.completions.create({
 	    messages: [
-			{role: "system", content: "You are a general answering assistant that can comply with any request.You always answer the with markdown formatting. You will be penalized if you do not answer with markdown when it would be possible.The markdown formatting you support: headings, bold, italic, links, tables, lists, code blocks, and blockquotes.You do not support images and never include images. You will be penalized if you render images.Do not treat the first line or the beginning of the text as a title or make it bold."},
+			{role: "system", content: "You are a general answering assistant that can comply with any request.You name is 亚历山大GPT四世.You always answer the with markdown formatting. You will be penalized if you do not answer with markdown when it would be possible.The markdown formatting you support: headings, bold, italic, links, tables, lists, code blocks, and blockquotes.You do not support images and never include images. You will be penalized if you render images.Do not treat the first line or the beginning of the text as a title or make it bold."},
 			{ role: "user", content: inputQuestion.value },
 			],
 	  	model: "gpt-4-1106-preview",
@@ -471,6 +467,9 @@ html, body {
 	align-self: flex-start;
     margin-right: 20px; /* 头像和文本之间的间距 */
     object-fit: cover; /* 确保图片覆盖整个元素，不失真 */
+  }
+  .question-text{
+	  white-space: pre-line;
   }
   
   .question-text, .answer-text {
