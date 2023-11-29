@@ -10,16 +10,22 @@
     "@element-plus/icons-vue": "^2.1.0",
     "axios": "^1.6.1",
     "element-plus": "^2.4.1",
+    "js-cookie": "^3.0.5",
     "markdown-it": "^13.0.2",
     "openai": "^4.17.0",
+    "uuid": "^9.0.1",
     "vue": "^3.3.8",
     "vue-gravatar": "^1.4.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^1.6.0",
+    "@types/js-cookie": "^3.0.6",
+    "@types/markdown-it": "^13.0.7",
+    "@types/uuid": "^9.0.7",
+    "@vitejs/plugin-vue": "^1.10.2",
     "@vue/compiler-sfc": "^3.2.6",
     "consola": "^3.2.3",
     "vite": "^2.9.16",
-    "vite-plugin-style-import": "^1.4.1"
+    "vite-plugin-style-import": "^1.4.1",
+    "vite-tsconfig-paths": "^4.2.1"
   }
 }

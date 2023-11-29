@@ -12,13 +12,7 @@ app.use(ElementPlus);
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+app.directive('scroll-bottom', {
+});
 
 app.mount('#app');
-// Vue.directive('scroll-bottom', {
-//   inserted: function(el) {
-//     el.scrollTop = el.scrollHeight;
-//   },
-//   update: function(el) {
-//     el.scrollTop = el.scrollHeight;
-//   },
-// });

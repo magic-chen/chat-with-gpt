@@ -1,52 +1,54 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
-import OpenAI from 'openai'
 import MarkdownIt from 'markdown-it'
-import VueGravatar from 'vue-gravatar'
+import Cookies from 'js-cookie'
+import { v4 as uuidv4 } from 'uuid';
+import { getConversations, deleteConversation, CreateOrUpdateConversation } from '@/services/ApiConversations';
+import { chat } from '@/services/ApiChat';
 
-const userEmail = Math.floor(Math.random() * 101).toString()
-const avatarDefault = 'retro'
+const activeIndex = ref('0')
 const iconSize = ref(15)
 const inputQuestion = ref('')
-const activeIndex = ref(1)
-const conversations = ref([
-  { 
-	  conversation_id: "conversaiton1", 
-	  conversation_title: "AI介绍", 
-	  chats: [
-		  {id: 'chat1', question: '你是谁？可以帮我做什么?', answer: "我是亚历山大GPT四世，可以根据您的需求提供各种信息和帮助，包括但不限于以下几个方面：\n\n1. **常识性问题**: 回答有关科学、历史、文化等范畴的一般性问题。\n2. **技术支持**: 提供简单的编程和技术问题的解答。\n3. **语言学习**: 帮助学习英语和其他语言的词汇、语法等。\n4. **生活建议**: 提供旅行计划、健康小建议以及日常生活相关的建议。\n5. **数学问题**: 解答数学问题，包括但不限于代数、几何、概率等。\n\n### 具体使用方法：\n- 询问问题时，请尽量明确且具体。\n- 如果是复杂的问题，可以分步骤提问。\n- 如果需要特定格式的信息（比如代码块、列表等），可以直接指明。\n\n### 例子：\n\n- 提问: \"请解释相对论是什么。\"\n- 请求编码帮助: \"如何用 Python 实现一个简单的计算器？\"\n- 学习语言: \"「苹果」用西班牙语怎么说？\"\n- 计划旅行: \"我计划去日本旅行，你有什么建议吗？\"\n- 数学问题解答: \"可以帮我解一个二次方程吗？\"\n\n请随时根据需要提出问题或请求帮助。"},  
-	  ],
-  },
-]);
+const conversations = ref<Conversation[]>([]);
 const isCollapsed = ref(false);
 const asideWidth = ref('250px');
-const selectedConversation = ref(undefined)
-const selectedChats = ref();
+const selectedConversation = ref<Conversation[]>([])
+const selectedChats = ref<Chat[]>([]);
 const default_conversation_title = "新的对话";
 const dialogVisible = ref(false);
 const md = new MarkdownIt();
-const entering = ref(false);
-const timer = ref(undefined)
 const inComposition = ref(false)
+const userId = ref('')
 
 function renderMarkdown(text:string) {
-  //console.log("答案 markdown格式为", text)
   const htmlContent = md.render(text);
-  //console.log("答案 html格式为", htmlContent);
   return htmlContent;
 }
 
-onMounted(() => {
-	openChatConversation("conversaiton1")
+onMounted(async () => {
+	try {
+		const cookieUserId = Cookies.get('userId');
+		
+		if (cookieUserId !== undefined) {
+		  userId.value = cookieUserId;
+		} else {
+		  userId.value = uuidv4()
+		  Cookies.set('userId', userId.value, { expires: 365 })
+		}
+
+	    const data = await getConversations(userId.value)
+		conversations.value = data
+	} catch (error) {
+	    console.error('Error:', error);
+	}
+	openChatConversation(-1)
 });
 
 
 function scrollToBottom() {
-	//console.log("准备滚动到底部")
   const chatPanel = document.querySelector('.chat-panel-middle');
   if (chatPanel) {
     chatPanel.scrollTop = chatPanel.scrollHeight;
-	//console.log("已经滚动到底部")
   }
 }
 
@@ -60,23 +62,16 @@ function openSidebar() {
     asideWidth.value = isCollapsed.value ? '0px' : '200px';
 }
 
-function handleNewChatClick(){
-	// 创建一个新的空白对话对象
-	const newConversation = createNewConversaiton();
-	// 将新的对话对象添加到 conversations 数组
+async function handleNewChatClick(){
+	let newConversation: Conversation = await createNewConversaiton();
 	conversations.value.push(newConversation);
+	activeIndex.value = String(conversations.value.length-1)
+	console.log("当前被激活的index:", activeIndex.value)
 	// 设置新对话为选中状态
 	selectedConversation.value = [newConversation];
 	selectedChats.value = newConversation.chats;
 }
 
-function updateConversationTitle(conversationId:string, newTitle:string) {
-    // 在用户输入第一个问题后，将其设置为对话的标题
-    const conversation = this.conversations.find(conversation => conversation.conversation_id === conversationId);
-    if (conversation) {
-      conversation.conversation_title = newTitle;
-    }
-}
 
 function handleCompositionStart() {
 	inComposition.value = true;
@@ -85,21 +80,21 @@ function handleCompositionEnd() {
     inComposition.value = false;
 }
 
-function handleKeyDown(event){
+function handleKeyDown(event:KeyboardEvent): void{
 	const isCtrlKey = event.ctrlKey || event.metaKey;
-	if (isCtrlKey && event.keyCode === 13) {
+	if (isCtrlKey && event.key === 'Enter') {
 		console.log("用户用enter换行")
 	    inputQuestion.value += "\n";
-	}else if(inComposition.value && event.keyCode === 13){
+	}else if(inComposition.value && event.key === 'Enter'){
 		console.log("用户用enter选择输入信息")
-	}else if(!inComposition.value && event.keyCode === 13){
+	}else if(!inComposition.value && event.key === 'Enter'){
 		console.log("开始提交")
 		event.preventDefault();
 		handleSubmit()
 	} 
 }
 
-function handleSubmit(){
+async function handleSubmit(){
 	inputQuestion.value = inputQuestion.value.replace(/^(\r\n|\n|\r)+|(\r\n|\n|\r)+$/g, "");
 	if(inputQuestion.value.trim() === ""){
 		console.log("无效提交")
@@ -108,126 +103,114 @@ function handleSubmit(){
 	
 	console.log("此时对话为： ", JSON.stringify(selectedConversation.value))
 	//如果用户当前没有选中任何对话 创建一个对话
-	if(selectedConversation.value === undefined){
-		selectedConversation.value = [createNewConversaiton(inputQuestion.value)]
+	if(selectedConversation.value === undefined || selectedConversation.value[0].user_id === 'system'){
+		selectedConversation.value = [await createNewConversaiton()]
 		selectedChats.value = selectedConversation.value[0].chats
 		conversations.value.push(selectedConversation.value[0])
-		
-		if(selectedConversation.value[0].conversation_title === default_conversation_title){
-			selectedConversation.value[0].conversation_title = inputQuestion.value.substring(0, 10)
-			console.log("更新对话标题为：", selectedConversation.value[0].conversation_title)
-		}
-	}
-	else {
-		selectedConversation.value[0].chats.push({id: generateUniqueConversationId(), question: inputQuestion.value, answer: ''})
-		updateConversationInConversations(selectedConversation.value)
+	}else {
+		selectedConversation.value[0].chats.push({id: uuidv4(), HUMAN: inputQuestion.value, AI: ''})
+		updateConversationInConversations(selectedConversation.value[0])
 	}
 	
-	//调用openai得到数据
-	callOpenAI()
-	//清空输入框内容
-	inputQuestion.value = ''
+	if(selectedConversation.value[0].conversation_title === default_conversation_title){
+		updateTitleInConversation()
+	}
+	
 	nextTick(() => {
 	    scrollToBottom()
 	});
-}
-
-function createNewConversaiton(question?: string){
-	const title:string = default_conversation_title;
-	let chats = []
-	if(question !== undefined){
-		chats = [{id: generateUniqueConversationId(), question: question, answer: ""}]
+	const [answer] = await Promise.all([
+	    chat(selectedConversation.value[0].id, userId.value, inputQuestion.value),
+	    inputQuestion.value = ''
+	  ]);
+	if (answer){
+		updateAnswerInChats(answer)
 	}
-	return {
-	  conversation_id: generateUniqueConversationId(),
+}
+
+async function createNewConversaiton(){
+	const title:string = default_conversation_title
+	let data = {
+	  id: undefined,
+	  user_id: userId.value,
 	  conversation_title: title,
-	  chats: chats,
+	  chats: [],
 	};
+	let responseData = await CreateOrUpdateConversation(userId.value, JSON.stringify(data))
+	if(responseData){
+		data.id = responseData.id
+	}
+	
+	return data
 }
 
-function openChatConversation(conversationId:string) {
-	
-    // 遍历对话数组，寻找匹配的对话
+function openChatConversation(id: number|undefined) {
     selectedConversation.value = conversations.value.filter(
-      (conversation) => conversation.conversation_id === conversationId
+      (conversation) => conversation.id === id
     );
-    // 检查是否找到匹配的对话
-    if (selectedConversation) {
-      // 更新当前选中的对话和对话的聊天数据
-		selectedChats.value = selectedConversation.value[0].chats;
+    if (selectedConversation.value.length === 0) {
+		selectedConversation.value = conversations.value.filter(
+		(conversation) => conversation.user_id === 'system');
     }
+	console.log("selectedConversation",  JSON.stringify(selectedConversation.value))
+	selectedChats.value = selectedConversation.value[0].chats;
+	// console.log("selectedChats",  JSON.stringify(selectedChats.value))
 }
 
-function deleteChatConversation(conversationIdToDelete){
-	const deletedIndex = this.conversations.findIndex(conversation => conversation.conversation_id === conversationIdToDelete);
+function deleteChatConversation(conversationIdToDelete: number|undefined){
+	console.log("delete chat conversation, id: ", conversationIdToDelete)
+	const deletedIndex = conversations.value.findIndex(conversation => conversation.id === conversationIdToDelete);
 	  if (deletedIndex !== -1) {
-	    // 删除对话
-	    this.conversations.splice(deletedIndex, 1);
-	
+	    // 本地删除对话
+	    conversations.value.splice(deletedIndex, 1);
+		
+		// 远程删除对话
+		deleteConversation(userId.value, conversationIdToDelete)
+		
 	    // 检查是否还有其他对话
-	    if (this.conversations.length > 0) {
+	    if (conversations.value.length > 0) {
 	      // 计算下一条对话的索引
-	      const nextIndex = deletedIndex >= this.conversations.length ? this.conversations.length - 1 : deletedIndex;
+	      const nextIndex = deletedIndex >= conversations.value.length ? conversations.value.length - 1 : deletedIndex;
 	
 	      // 设置下一条对话为选中状态
-	      this.openChatConversation(this.conversations[nextIndex].conversation_id);
+	      openChatConversation(conversations.value[nextIndex].id);
 	    } else {
-		  this.selectedConversation = undefined;
-	      this.selectedChats = [];
+		  selectedConversation.value = [];
+	      selectedChats.value = [];
 	    }
 	  }
 }
 
-function updateConversationInConversations(updatedConversation) {
+function updateConversationInConversations(updatedConversation: Conversation) {
   const index = conversations.value.findIndex(
-    (conversation) => conversation.conversation_id === updatedConversation.conversation_id
+    (conversation) => conversation.id === updatedConversation.id
   );
 
   if (index !== -1) {
-    // 使用新的 selectedConversation 替换 conversations 中相应索引的数据
     conversations.value[index] = updatedConversation;
 	console.log("更新对话数据成功")
   }
 }
 
-function updateAnswerInChats(updatedAnswer){
-	const lastChat = selectedChats.value[selectedChats.value.length - 1]
-	lastChat.answer = updatedAnswer
+function updateAnswerInChats(updatedAnswer:string){
+	let lastChat = selectedChats.value[selectedChats.value.length - 1]
+	if(lastChat){
+		lastChat.AI = updatedAnswer
+	}
 	nextTick(() => {
 	    scrollToBottom()
 	});
 }
 
-function generateUniqueConversationId() {
-	return Math.random().toString(36).substr(2, 9);
+function updateTitleInConversation(){
+	if(selectedConversation.value[0].conversation_title === default_conversation_title){
+		selectedConversation.value[0].conversation_title = inputQuestion.value.substring(0, 10)
+		CreateOrUpdateConversation(userId.value, JSON.stringify(selectedConversation.value[0]))
+		console.log("更新对话标题为：", selectedConversation.value[0].conversation_title)
+	}
 }
 
-async function callOpenAI() {
-  // const apiKey:string = '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';
-  const apiKey:string = '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';
-  const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
-  console.log("user input is ", inputQuestion.value)
-  const openai = new OpenAI({apiKey: apiKey, dangerouslyAllowBrowser: true});
-  
-  try{
-	  const result = await openai.chat.completions.create({
-	    messages: [
-			{role: "system", content: "You are a general answering assistant that can comply with any request.You name is 亚历山大GPT四世.You always answer the with markdown formatting. You will be penalized if you do not answer with markdown when it would be possible.The markdown formatting you support: headings, bold, italic, links, tables, lists, code blocks, and blockquotes.You do not support images and never include images. You will be penalized if you render images.Do not treat the first line or the beginning of the text as a title or make it bold."},
-			{ role: "user", content: inputQuestion.value },
-			],
-	  	model: "gpt-4-1106-preview",
-	  });
-	  const responseText = result.choices[0].message.content
-	  // 获取message属性，这是chat completion接口生成的回复内容
-	  if(responseText){
-	  	updateAnswerInChats(responseText)
-	  }
-	  console.log("response is ", JSON.stringify(responseText))
-  }catch(error){
-	  console.log('Error:', error)
-  }
-}
 
 </script>
 
@@ -245,7 +228,7 @@ async function callOpenAI() {
 	              </div>
 				  <div class="chat-history">
 					   <el-menu
-					        :default-active="activeIndex"
+							:default-active="activeIndex"
 					        class="el-menu-vertical"
 					        background-color=black
 					        text-color="#fff"
@@ -253,14 +236,14 @@ async function callOpenAI() {
 					      >
 					        <el-menu-item 
 								v-for="(conversation, index) in conversations"
-								        :key="conversation.conversation_id"
-								        :index="conversation.conversation_id"
-								        @click="openChatConversation(conversation.conversation_id)"
+								        :key="conversation.id"
+										:index=String(index)
+								        @click="openChatConversation(conversation.id)"
 								        class="el-menu-item-style"
 							>
 							  <el-icon><ChatSquare /></el-icon>
 					          <div class="title-container">{{ conversation.conversation_title }}</div>
-					          <el-icon class="delete-icon" @click.stop="deleteChatConversation(conversation.conversation_id)">
+					          <el-icon class="delete-icon" @click.stop="deleteChatConversation(conversation.id)">
 					            <Delete />
 					          </el-icon>
 					        </el-menu-item>
@@ -281,13 +264,13 @@ async function callOpenAI() {
 					             >
 					               <div class="question-row">
 					                 <img class="avatar" src="/src/assets/human1.png">
-					                 <span class="question-text">{{ chat.question }}</span>
+					                 <span class="question-text">{{ chat.HUMAN }}</span>
 					               </div>
 					               
-					               <div v-if="chat.answer" class="answer-row">
+					               <div v-if="chat.AI" class="answer-row">
 					                 <img class="avatar" src="/src/assets/GPT.png">
-									 <div class="answer-text" v-html="renderMarkdown(chat.answer)"></div>
-					               </div>
+									 <div class="answer-text" v-html="renderMarkdown(chat.AI)"></div>
+								   </div>
 					             </div>
 								  <el-input
 										v-model="inputQuestion"
@@ -331,7 +314,6 @@ html, body {
 .sidebar {
   background-color: black;
   transition: width 0.3s ease; /* 添加平滑过渡效果 */
-  overflow: hidden;
 }
 .header-sidebar {
   height: 40px;
@@ -351,7 +333,7 @@ html, body {
 .close-sidebar-button {
 	flex-grow: 1;
 	border: 1px solid white;
-	border-radius: 4px; /* 可选的圆角 */
+	border-radius: 4px;
 }
 .new-chat-button:hover {
 	border: 1px solid #B1B1B1 !important;
@@ -367,7 +349,7 @@ html, body {
   font-size: 12px;
 }
 .el-menu .el-menu-item.is-active {
-  background-color: #222; /* 自定义背景颜色 */
+  background-color: #222;
 }
 
 .el-menu-item-style {
@@ -378,7 +360,7 @@ html, body {
   display: none;
 }
 .title-container {
-  max-width: 150px; /* 适当设置标题容器的最大宽度 */
+  max-width: 150px; 
   white-space: nowrap; /* 防止文本换行 */
   overflow: hidden; /* 隐藏超出容器宽度的文本 */
   text-overflow: ellipsis; /* 在文本截断时显示省略号 */
@@ -389,11 +371,11 @@ html, body {
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
-  visibility: hidden;
+  display: none;
 }
 
 .el-menu-item-style.is-active .delete-icon {
-  visibility: visible;
+  display: block;
 }
 
 
@@ -410,7 +392,7 @@ html, body {
 .open-sidebar-button {
 	border: 1px solid black;
 	color: black;
-	border-radius: 4px; /* 可选的圆角 */
+	border-radius: 4px;
 }
 
 .chat-panel-left {
@@ -448,7 +430,7 @@ html, body {
   .question-row, .answer-row {
     display: flex;
 	min-height: 70px;
-    align-items: center; /* 确保项目垂直居中 */
+    align-items: center;
     margin-bottom: 25px;
   }
   .question-row:nth-child(odd)
@@ -458,15 +440,15 @@ html, body {
   
   .question-row:nth-child(even),
   .answer-row:nth-child(even) {
-    background-color: #f2f2f2f2; /* 深灰色背景 */
+    background-color: #f2f2f2f2;
   }
   
   .avatar {
-    width: 50px; /* 设置头像宽度 */
-    height: 50px; /* 设置头像高度 */
+    width: 50px;
+    height: 50px;
 	align-self: flex-start;
-    margin-right: 20px; /* 头像和文本之间的间距 */
-    object-fit: cover; /* 确保图片覆盖整个元素，不失真 */
+    margin-right: 20px;
+    object-fit: cover;
   }
   .question-text{
 	  white-space: pre-line;
@@ -474,7 +456,7 @@ html, body {
   
   .question-text, .answer-text {
 	font-size: 14px;
-    flex-grow: 1; /* 文本元素填充剩余空间 */
+    flex-grow: 1;
 	display: block;
 	width: 100%;
 	align-self: flex-start;
