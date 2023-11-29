@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import ViteTsconfigPaths from 'vite-tsconfig-paths';
+import ViteTsconfigPaths from 'vite-tsconfig-paths'
 import styleImport from 'vite-plugin-style-import'
 
 export default defineConfig({
@@ -9,7 +9,7 @@ export default defineConfig({
 		port: 3001,
 		proxy: {
 		      '/*': {
-		        target: 'http://127.0.0.1:5000',
+		        target: 'http://172.21.72.9:5000',
 		        changeOrigin: true,
 		      },
 		    },
