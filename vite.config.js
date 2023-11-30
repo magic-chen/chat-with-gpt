@@ -9,7 +9,7 @@ export default defineConfig({
 		port: 3001,
 		proxy: {
 		      '/*': {
-		        target: 'http://172.21.72.9:5000',
+		        target: 'http://localhost:5000',
 		        changeOrigin: true,
 		      },
 		    },

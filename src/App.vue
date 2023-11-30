@@ -105,8 +105,10 @@ async function handleSubmit(){
 	//如果用户当前没有选中任何对话 创建一个对话
 	if(selectedConversation.value === undefined || selectedConversation.value[0].user_id === 'system'){
 		selectedConversation.value = [await createNewConversaiton()]
+		selectedConversation.value[0].chats.push({id: uuidv4(), HUMAN: inputQuestion.value, AI: ''})
 		selectedChats.value = selectedConversation.value[0].chats
-		conversations.value.push(selectedConversation.value[0])
+		conversations.value.push(selectedConversation.value[0]);
+		activeIndex.value = String(conversations.value.length-1)
 	}else {
 		selectedConversation.value[0].chats.push({id: uuidv4(), HUMAN: inputQuestion.value, AI: ''})
 		updateConversationInConversations(selectedConversation.value[0])
@@ -140,7 +142,6 @@ async function createNewConversaiton(){
 	if(responseData){
 		data.id = responseData.id
 	}
-	
 	return data
 }
 
@@ -193,6 +194,7 @@ function updateConversationInConversations(updatedConversation: Conversation) {
 }
 
 function updateAnswerInChats(updatedAnswer:string){
+	console.log("当前的聊天为：", selectedChats.value)
 	let lastChat = selectedChats.value[selectedChats.value.length - 1]
 	if(lastChat){
 		lastChat.AI = updatedAnswer
