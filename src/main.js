@@ -5,6 +5,7 @@ import 'element-plus/dist/index.css'
 import './assets/styles/base.css'
 import axios from 'axios'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import LoadingAnimation from './components/LoadingAnimation.vue'
 
 const app = createApp(App);
 app.config.globalProperties.axios = axios;
@@ -14,5 +15,6 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 app.directive('scroll-bottom', {
 });
+app.component('LoadingAnimation', LoadingAnimation);
 
 app.mount('#app');

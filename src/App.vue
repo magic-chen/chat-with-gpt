@@ -19,6 +19,7 @@ const dialogVisible = ref(false);
 const md = new MarkdownIt();
 const inComposition = ref(false)
 const userId = ref('')
+const isLoading = ref(false)
 
 function renderMarkdown(text:string) {
   const htmlContent = md.render(text);
@@ -46,20 +47,10 @@ onMounted(async () => {
 
 
 function scrollToBottom() {
-  const chatPanel = document.querySelector('.chat-panel-middle');
-  if (chatPanel) {
-    chatPanel.scrollTop = chatPanel.scrollHeight;
+  const chatContent= document.querySelector('.chat-content');
+  if (chatContent) {
+    chatContent.scrollTop = chatContent.scrollHeight;
   }
-}
-
-function closeSidebar() {
-  isCollapsed.value = !isCollapsed.value;
-  asideWidth.value = isCollapsed.value ? '0px' : '200px';
-}
-
-function openSidebar() {
-    isCollapsed.value = !isCollapsed.value;
-    asideWidth.value = isCollapsed.value ? '0px' : '200px';
 }
 
 async function handleNewChatClick(){
@@ -121,10 +112,12 @@ async function handleSubmit(){
 	nextTick(() => {
 	    scrollToBottom()
 	});
+	isLoading.value = true
 	const [answer] = await Promise.all([
 	    chat(selectedConversation.value[0].id, userId.value, inputQuestion.value),
 	    inputQuestion.value = ''
 	  ]);
+	isLoading.value = false
 	if (answer){
 		updateAnswerInChats(answer)
 	}
@@ -222,10 +215,7 @@ function updateTitleInConversation(){
 	              <div class="header-sidebar">
 	                <el-button type="text" class="new-chat-button" @click="handleNewChatClick" title="新建聊天">
 	                  <el-icon class="icon-white" :size="iconSize"><Plus /></el-icon>
-	                  <span class="new-chat-text">New Chat</span>
-	                </el-button>
-	                <el-button type="text" class="close-sidebar-button" @click="closeSidebar" title="折叠侧边栏">
-	                  <el-icon class="icon-white" :size="iconSize"><Fold /></el-icon>
+	                  <span class="new-chat-text">新建聊天</span>
 	                </el-button>
 	              </div>
 				  <div class="chat-history">
@@ -255,11 +245,6 @@ function updateTitleInConversation(){
 
 			  <el-container class="chat-panel">
 				  <el-main class="chat-content">
-					  <div class="chat-panel-left">
-					    <el-button v-if="isCollapsed" type="" class="open-sidebar-button" @click="openSidebar" title="展开侧边栏">
-					      <el-icon :size="iconSize"><Expand /></el-icon>
-					    </el-button>
-					  </div>
 					   <div class="chat-panel-middle" v-scroll-bottom>
 					             <div v-for="(chat, index) in selectedChats" 
 					               :key="index"
@@ -269,9 +254,12 @@ function updateTitleInConversation(){
 					                 <span class="question-text">{{ chat.HUMAN }}</span>
 					               </div>
 					               
-					               <div v-if="chat.AI" class="answer-row">
-					                 <img class="avatar" src="/src/assets/GPT.png">
+								  <div v-if="chat.AI" class="answer-row">
+									 <img class="avatar" src="/src/assets/GPT.png">
 									 <div class="answer-text" v-html="renderMarkdown(chat.AI)"></div>
+								   </div>
+								   <div v-else-if="isLoading" class="loading-animation-box">
+										   <loading-animation/>
 								   </div>
 					             </div>
 								  <el-input
@@ -286,20 +274,9 @@ function updateTitleInConversation(){
 										suffix-icon="Position"
 								  ></el-input>
 					    </div>
-					  <div class="chat-panel-right">
-					  </div>
 				  </el-main>
 			</el-container>
 	    </el-container>
-		
-		<el-dialog
-		    title="确认删除"
-		    :visible.sync="dialogVisible"
-		    width="30%"
-		    @confirm="deleteChatConversation"
-		  >
-		    <p>确定要删除这个对话吗？</p>
-		  </el-dialog>
 </template>
 
 <style scoped>
@@ -321,15 +298,15 @@ html, body {
   height: 40px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 20px;
   background-color: black;
 }
 .new-chat-button {
   display: flex;
   align-items: center;
-  flex-grow: 3;
+  flex-grow: 1;
   border: 1px solid white;
-  border-radius: 4px; /* 可选的圆角 */
+  border-radius: 6px; 
 }
 
 .close-sidebar-button {
@@ -348,7 +325,7 @@ html, body {
 }
 .new-chat-text {
   color: white;
-  font-size: 12px;
+  font-size: 14px;
 }
 .el-menu .el-menu-item.is-active {
   background-color: #222;
@@ -357,12 +334,14 @@ html, body {
 .el-menu-item-style {
   display: flex;
   position: relative;
+  max-height: 50px;
 }
 .el-menu-item-style::after {
   display: none;
 }
 .title-container {
   max-width: 150px; 
+  font-size: 12px;
   white-space: nowrap; /* 防止文本换行 */
   overflow: hidden; /* 隐藏超出容器宽度的文本 */
   text-overflow: ellipsis; /* 在文本截断时显示省略号 */
@@ -380,33 +359,23 @@ html, body {
   display: block;
 }
 
-
 .chat-panel {
 	display: flex;
 	height: 100%;
-	overflow: hidden;
+	overflow-y: auto; 
 }
 .chat-content {
 	display: flex;
-	height: calc(100vh - 80px);
+	justify-content: center;
+	height: calc(100vh - 110px);
 }
 
-.open-sidebar-button {
-	border: 1px solid black;
-	color: black;
-	border-radius: 4px;
-}
-
-.chat-panel-left {
-	min-height: 100px;
-	flex-grow: 1;
-}
 .chat-panel-middle {
 	min-height: 100px;
+	height: 100%;
 	max-width: 600px;
 	flex-grow: 2;
 	position: relative;
-  overflow-y: auto;
 }
 .chat-panel-middle::-webkit-scrollbar {
   display: none; /* 对于webkit浏览器隐藏滚动条 */
@@ -415,10 +384,6 @@ html, body {
 .chat-panel-middle {
   -ms-overflow-style: none; /* 对于IE和Edge */
   scrollbar-width: none; /* 对于Firefox */
-}
-.chat-panel-right {
-	min-height: 100px;
-	flex-grow: 1;
 }
 
 /* 定位输入框在底部 */
@@ -429,38 +394,45 @@ html, body {
   background-color: white;
 }
   
-  .question-row, .answer-row {
-    display: flex;
+.question-row, .answer-row {
+	display: flex;
 	min-height: 70px;
-    align-items: center;
-    margin-bottom: 25px;
-  }
-  .question-row:nth-child(odd)
-  .answer-row:nth-child(odd){
-    background-color: white; 
-  }
-  
-  .question-row:nth-child(even),
-  .answer-row:nth-child(even) {
-    background-color: #f2f2f2f2;
-  }
-  
-  .avatar {
-    width: 50px;
-    height: 50px;
+	align-items: center;
+	margin-bottom: 25px;
+}
+.question-row:nth-child(odd)
+.answer-row:nth-child(odd){
+	background-color: white; 
+}
+
+.question-row:nth-child(even),
+.answer-row:nth-child(even) {
+	background-color: #f2f2f2f2;
+}
+
+.avatar {
+	width: 50px;
+	height: 50px;
 	align-self: flex-start;
-    margin-right: 20px;
-    object-fit: cover;
-  }
-  .question-text{
-	  white-space: pre-line;
-  }
-  
-  .question-text, .answer-text {
+	margin-right: 20px;
+	object-fit: cover;
+}
+.question-text{
+  white-space: pre-line;
+}
+
+.question-text, .answer-text {
 	font-size: 14px;
-    flex-grow: 1;
+	flex-grow: 1;
 	display: block;
 	width: 100%;
 	align-self: flex-start;
-  }
+}
+
+.loading-animation-box {
+  min-height: 50px;
+  display: flex;
+	justify-content: center;
+	align-items: center;
+}
 </style>
