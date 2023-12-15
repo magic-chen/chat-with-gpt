@@ -2,6 +2,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import ViteTsconfigPaths from 'vite-tsconfig-paths'
 import styleImport from 'vite-plugin-style-import'
+import Components from 'unplugin-vue-components/vite';
+import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers';
 
 export default defineConfig({
 	server: {
@@ -17,6 +19,13 @@ export default defineConfig({
   plugins: [
     vue(),
 	ViteTsconfigPaths(),
+	Components({
+	  resolvers: [
+		AntDesignVueResolver({
+		  importStyle: false, // css in js
+		}),
+	  ],
+	}),
     styleImport({
       libs: [{
         libraryName: 'element-plus',

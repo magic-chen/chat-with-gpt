@@ -10,16 +10,19 @@ const activeIndex = ref('0')
 const iconSize = ref(15)
 const inputQuestion = ref('')
 const conversations = ref<Conversation[]>([]);
-const isCollapsed = ref(false);
 const asideWidth = ref('250px');
 const selectedConversation = ref<Conversation[]>([])
 const selectedChats = ref<Chat[]>([]);
 const default_conversation_title = "新的对话";
-const dialogVisible = ref(false);
 const md = new MarkdownIt();
 const inComposition = ref(false)
 const userId = ref('')
 const isLoading = ref(false)
+const floatButton =  {
+	position: "absolute",
+	top: "8px",
+	left: "260px"
+}
 
 function renderMarkdown(text:string) {
   const htmlContent = md.render(text);
@@ -92,7 +95,7 @@ async function handleSubmit(){
 		return
 	}
 	
-	console.log("此时对话为： ", JSON.stringify(selectedConversation.value))
+	// console.log("此时对话为： ", JSON.stringify(selectedConversation.value))
 	//如果用户当前没有选中任何对话 创建一个对话
 	if(selectedConversation.value === undefined || selectedConversation.value[0].user_id === 'system'){
 		selectedConversation.value = [await createNewConversaiton()]
@@ -187,7 +190,7 @@ function updateConversationInConversations(updatedConversation: Conversation) {
 }
 
 function updateAnswerInChats(updatedAnswer:string){
-	console.log("当前的聊天为：", selectedChats.value)
+	// console.log("当前的聊天为：", selectedChats.value)
 	let lastChat = selectedChats.value[selectedChats.value.length - 1]
 	if(lastChat){
 		lastChat.AI = updatedAnswer
@@ -201,7 +204,7 @@ function updateTitleInConversation(){
 	if(selectedConversation.value[0].conversation_title === default_conversation_title){
 		selectedConversation.value[0].conversation_title = inputQuestion.value.substring(0, 10)
 		CreateOrUpdateConversation(userId.value, JSON.stringify(selectedConversation.value[0]))
-		console.log("更新对话标题为：", selectedConversation.value[0].conversation_title)
+		// console.log("更新对话标题为：", selectedConversation.value[0].conversation_title)
 	}
 }
 
@@ -221,10 +224,10 @@ function updateTitleInConversation(){
 				  <div class="chat-history">
 					   <el-menu
 							:default-active="activeIndex"
-					        class="el-menu-vertical"
 					        background-color=black
 					        text-color="#fff"
 					        active-text-color="#fff"
+							:style="{borderRight: 'none'}"
 					      >
 					        <el-menu-item 
 								v-for="(conversation, index) in conversations"
@@ -233,9 +236,9 @@ function updateTitleInConversation(){
 								        @click="openChatConversation(conversation.id)"
 								        class="el-menu-item-style"
 							>
-							  <el-icon><ChatSquare /></el-icon>
+							  <el-icon :size="15"><ChatSquare  /></el-icon>
 					          <div class="title-container">{{ conversation.conversation_title }}</div>
-					          <el-icon class="delete-icon" @click.stop="deleteChatConversation(conversation.id)">
+					          <el-icon class="delete-icon" :size="15" @click.stop="deleteChatConversation(conversation.id)">
 					            <Delete />
 					          </el-icon>
 					        </el-menu-item>
@@ -245,6 +248,7 @@ function updateTitleInConversation(){
 
 			  <el-container class="chat-panel">
 				  <el-main class="chat-content">
+					  <FloatButton :customClass="floatButton"/>
 					   <div class="chat-panel-middle" v-scroll-bottom>
 					             <div v-for="(chat, index) in selectedChats" 
 					               :key="index"
@@ -259,7 +263,7 @@ function updateTitleInConversation(){
 									 <div class="answer-text" v-html="renderMarkdown(chat.AI)"></div>
 								   </div>
 								   <div v-else-if="isLoading" class="loading-animation-box">
-										   <loading-animation/>
+										   <a-spin />
 								   </div>
 					             </div>
 								  <el-input
@@ -269,9 +273,10 @@ function updateTitleInConversation(){
 										@compositionend="handleCompositionEnd"
 										class="chat-input"
 										type="textarea"
-										:autosize="{ minRows: 2, maxRows: 6 }"
-										placeholder="输入你的问题, 按Enter发送"
+										:autosize="{ minRows: 1, maxRows: 5 }"
+										placeholder=" 输入你的问题, 按Enter发送"
 										suffix-icon="Position"
+										:input-style="{borderRadius: '20px', borderColor: 'red', boxShadow: '0 4px 10px #ccc', lineHeight: 2.5}"
 								  ></el-input>
 					    </div>
 				  </el-main>
@@ -295,10 +300,10 @@ html, body {
   transition: width 0.3s ease; /* 添加平滑过渡效果 */
 }
 .header-sidebar {
-  height: 40px;
+  height: 60px;
   display: flex;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 15px;
   background-color: black;
 }
 .new-chat-button {
@@ -332,9 +337,12 @@ html, body {
 }
 
 .el-menu-item-style {
+  margin: 5px;
   display: flex;
   position: relative;
   max-height: 50px;
+  border-radius: 15px;
+  
 }
 .el-menu-item-style::after {
   display: none;
@@ -367,8 +375,9 @@ html, body {
 .chat-content {
 	display: flex;
 	justify-content: center;
-	height: calc(100vh - 110px);
+	height: calc(100vh - 120px);
 }
+
 
 .chat-panel-middle {
 	min-height: 100px;
@@ -386,14 +395,21 @@ html, body {
   scrollbar-width: none; /* 对于Firefox */
 }
 
-/* 定位输入框在底部 */
+
 .chat-input {
   position: fixed;
-  bottom: 50px; 
+  bottom: 40px; 
   max-width: 600px;
-  background-color: white;
+  border-radius: 20px;
 }
-  
+
+/* .chat-input-style {
+	border-color: black;
+	border-radius: 20px;
+	boxShadow: 0 4px 10px #ccc;
+	lineHeight: 2;
+} */
+
 .question-row, .answer-row {
 	display: flex;
 	min-height: 70px;
@@ -407,7 +423,7 @@ html, body {
 
 .question-row:nth-child(even),
 .answer-row:nth-child(even) {
-	background-color: #f2f2f2f2;
+	/* background-color: #f2f2f2f2; */
 }
 
 .avatar {
@@ -416,6 +432,8 @@ html, body {
 	align-self: flex-start;
 	margin-right: 20px;
 	object-fit: cover;
+	border-radius: 20%;
+	overflow: hidden; 
 }
 .question-text{
   white-space: pre-line;
