@@ -1,5 +1,77 @@
+<template>
+	    <el-container class="chat-container">
+	            <el-aside :style="{ width: asideWidth }" class="sidebar">
+	              <div class="header-sidebar">
+	                <el-button type="text" class="new-chat-button" @click="handleNewChatClick" title="新建聊天">
+	                  <el-icon class="icon-white" :size="iconSize"><Plus /></el-icon>
+	                  <span class="new-chat-text">新建聊天</span>
+	                </el-button>
+	              </div>
+				  <div class="chat-history">
+					   <el-menu
+							:default-active="activeIndex"
+					        background-color=black
+					        text-color="#fff"
+					        active-text-color="#fff"
+							:style="{borderRight: 'none'}"
+					      >
+					        <el-menu-item 
+								v-for="(conversation, index) in conversations"
+								        :key="conversation.id"
+										:index=String(index)
+								        @click="openChatConversation(conversation.id)"
+								        class="el-menu-item-style"
+							>
+							  <el-icon :size="15"><ChatSquare  /></el-icon>
+					          <div class="title-container">{{ conversation.conversation_title }}</div>
+					          <el-icon class="delete-icon" :size="15" @click.stop="deleteChatConversation(conversation.id)">
+					            <Delete />
+					          </el-icon>
+					        </el-menu-item>
+						</el-menu>
+				  </div>
+	            </el-aside>
+
+			  <el-container class="chat-panel">
+				  <el-main class="chat-content">
+					  <FloatButton :customClass="floatButton" />
+					   <div class="chat-panel-middle" v-scroll-bottom>
+					             <div v-for="(chat, index) in selectedChats" 
+					               :key="index"
+					             >
+					               <div class="question-row">
+					                 <img class="avatar" src="/src/assets/human1.png">
+					                 <span class="question-text">{{ chat.HUMAN }}</span>
+					               </div>
+					               
+								  <div v-if="chat.AI" class="answer-row">
+									 <img class="avatar" src="/src/assets/GPT.png">
+									 <div class="answer-text" v-html="renderMarkdown(chat.AI)"></div>
+								   </div>
+								   <div v-else-if="isLoading" class="loading-animation-box">
+										   <a-spin />
+								   </div>
+					             </div>
+								  <el-input
+										v-model="inputQuestion"
+										@keydown="handleKeyDown"
+										@compositionstart="handleCompositionStart"
+										@compositionend="handleCompositionEnd"
+										class="chat-input"
+										type="textarea"
+										:autosize="{ minRows: 1, maxRows: 5 }"
+										placeholder=" 输入你的问题, 按Enter发送"
+										suffix-icon="Position"
+										:input-style="{borderRadius: '20px', borderColor: 'red', boxShadow: '0 4px 10px #ccc', lineHeight: 2.5}"
+								  ></el-input>
+					    </div>
+				  </el-main>
+			</el-container>
+	    </el-container>
+</template>
+
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, provide } from 'vue'
 import MarkdownIt from 'markdown-it'
 import Cookies from 'js-cookie'
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +95,12 @@ const floatButton =  {
 	top: "8px",
 	left: "260px"
 }
+const current_model_id = ref(1)
+const current_model_name = ref("ChatGPT-3.5")
+
+provide('current_model_id', current_model_id);
+provide('current_model_name', current_model_name);
+provide('userId', userId)
 
 function renderMarkdown(text:string) {
   const htmlContent = md.render(text);
@@ -115,14 +193,17 @@ async function handleSubmit(){
 	nextTick(() => {
 	    scrollToBottom()
 	});
-	isLoading.value = true
-	const [answer] = await Promise.all([
-	    chat(selectedConversation.value[0].id, userId.value, inputQuestion.value),
-	    inputQuestion.value = ''
-	  ]);
-	isLoading.value = false
-	if (answer){
-		updateAnswerInChats(answer)
+	try {
+	    const [answer] = await Promise.all([
+	        chat(selectedConversation.value[0].id, userId.value, inputQuestion.value),
+	        inputQuestion.value = ''
+	    ]);
+	    updateAnswerInChats(answer);
+	} catch (error) {
+		updateAnswerInChats('None');
+	    console.error('Error during chat:', error);
+	} finally {
+	    isLoading.value = false;
 	}
 }
 
@@ -151,25 +232,20 @@ function openChatConversation(id: number|undefined) {
     }
 	console.log("selectedConversation",  JSON.stringify(selectedConversation.value))
 	selectedChats.value = selectedConversation.value[0].chats;
-	// console.log("selectedChats",  JSON.stringify(selectedChats.value))
 }
 
 function deleteChatConversation(conversationIdToDelete: number|undefined){
 	console.log("delete chat conversation, id: ", conversationIdToDelete)
 	const deletedIndex = conversations.value.findIndex(conversation => conversation.id === conversationIdToDelete);
 	  if (deletedIndex !== -1) {
-	    // 本地删除对话
 	    conversations.value.splice(deletedIndex, 1);
 		
-		// 远程删除对话
 		deleteConversation(userId.value, conversationIdToDelete)
 		
 	    // 检查是否还有其他对话
 	    if (conversations.value.length > 0) {
-	      // 计算下一条对话的索引
 	      const nextIndex = deletedIndex >= conversations.value.length ? conversations.value.length - 1 : deletedIndex;
 	
-	      // 设置下一条对话为选中状态
 	      openChatConversation(conversations.value[nextIndex].id);
 	    } else {
 		  selectedConversation.value = [];
@@ -190,7 +266,6 @@ function updateConversationInConversations(updatedConversation: Conversation) {
 }
 
 function updateAnswerInChats(updatedAnswer:string){
-	// console.log("当前的聊天为：", selectedChats.value)
 	let lastChat = selectedChats.value[selectedChats.value.length - 1]
 	if(lastChat){
 		lastChat.AI = updatedAnswer
@@ -204,7 +279,6 @@ function updateTitleInConversation(){
 	if(selectedConversation.value[0].conversation_title === default_conversation_title){
 		selectedConversation.value[0].conversation_title = inputQuestion.value.substring(0, 10)
 		CreateOrUpdateConversation(userId.value, JSON.stringify(selectedConversation.value[0]))
-		// console.log("更新对话标题为：", selectedConversation.value[0].conversation_title)
 	}
 }
 
@@ -212,77 +286,7 @@ function updateTitleInConversation(){
 
 </script>
 
-<template>
-	    <el-container class="chat-container">
-	            <el-aside :style="{ width: asideWidth }" class="sidebar">
-	              <div class="header-sidebar">
-	                <el-button type="text" class="new-chat-button" @click="handleNewChatClick" title="新建聊天">
-	                  <el-icon class="icon-white" :size="iconSize"><Plus /></el-icon>
-	                  <span class="new-chat-text">新建聊天</span>
-	                </el-button>
-	              </div>
-				  <div class="chat-history">
-					   <el-menu
-							:default-active="activeIndex"
-					        background-color=black
-					        text-color="#fff"
-					        active-text-color="#fff"
-							:style="{borderRight: 'none'}"
-					      >
-					        <el-menu-item 
-								v-for="(conversation, index) in conversations"
-								        :key="conversation.id"
-										:index=String(index)
-								        @click="openChatConversation(conversation.id)"
-								        class="el-menu-item-style"
-							>
-							  <el-icon :size="15"><ChatSquare  /></el-icon>
-					          <div class="title-container">{{ conversation.conversation_title }}</div>
-					          <el-icon class="delete-icon" :size="15" @click.stop="deleteChatConversation(conversation.id)">
-					            <Delete />
-					          </el-icon>
-					        </el-menu-item>
-						</el-menu>
-				  </div>
-	            </el-aside>
 
-			  <el-container class="chat-panel">
-				  <el-main class="chat-content">
-					  <FloatButton :customClass="floatButton"/>
-					   <div class="chat-panel-middle" v-scroll-bottom>
-					             <div v-for="(chat, index) in selectedChats" 
-					               :key="index"
-					             >
-					               <div class="question-row">
-					                 <img class="avatar" src="/src/assets/human1.png">
-					                 <span class="question-text">{{ chat.HUMAN }}</span>
-					               </div>
-					               
-								  <div v-if="chat.AI" class="answer-row">
-									 <img class="avatar" src="/src/assets/GPT.png">
-									 <div class="answer-text" v-html="renderMarkdown(chat.AI)"></div>
-								   </div>
-								   <div v-else-if="isLoading" class="loading-animation-box">
-										   <a-spin />
-								   </div>
-					             </div>
-								  <el-input
-										v-model="inputQuestion"
-										@keydown="handleKeyDown"
-										@compositionstart="handleCompositionStart"
-										@compositionend="handleCompositionEnd"
-										class="chat-input"
-										type="textarea"
-										:autosize="{ minRows: 1, maxRows: 5 }"
-										placeholder=" 输入你的问题, 按Enter发送"
-										suffix-icon="Position"
-										:input-style="{borderRadius: '20px', borderColor: 'red', boxShadow: '0 4px 10px #ccc', lineHeight: 2.5}"
-								  ></el-input>
-					    </div>
-				  </el-main>
-			</el-container>
-	    </el-container>
-</template>
 
 <style scoped>
 html, body {
