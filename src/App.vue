@@ -194,6 +194,7 @@ async function handleSubmit(){
 	    scrollToBottom()
 	});
 	try {
+		isLoading.value = true;
 	    const [answer] = await Promise.all([
 	        chat(selectedConversation.value[0].id, userId.value, inputQuestion.value),
 	        inputQuestion.value = ''
