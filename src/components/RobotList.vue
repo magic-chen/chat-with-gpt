@@ -49,17 +49,17 @@ interface Model {
 const activeIndex = ref('')
 const open = ref(false)
 const data = ref<Model[]>([
-	{"type":"internal", "icon": "", "src": "/src/assets/openai-white.svg", "id":0, "name":"ChatGPT-3.5"},
-	{"type":"internal", "icon": "", "src": "/src/assets/openai-white.svg", "id":1, "name":"ChatGPT-4"},
+	{"type":"internal", "icon": "", "src": "/src/assets/openai-white.svg", "id":1, "name":"ChatGPT-3.5"},
+	{"type":"internal", "icon": "", "src": "/src/assets/openai-white.svg", "id":2, "name":"ChatGPT-4"},
 ]);
 
 onMounted(async () => {
   try {
-	const response = await getModels(userId.value);
-	data.value = response;
-	console.log("robot list onmounted, current model id:", current_model_id);
+	// const response = await getModels(userId.value);
+	// data.value = response;
+	// console.log("robot list onmounted, current model id:", current_model_id);
 	
-	console.log("加载时的index:", activeIndex.value)
+	// console.log("加载时的index:", activeIndex.value)
   } catch (error) {
 	console.error('Error fetching data:', error);
   }
