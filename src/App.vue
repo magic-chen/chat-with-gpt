@@ -39,14 +39,14 @@
 					             <div v-for="(chat, index) in selectedChats" 
 					               :key="index"
 					             >
-					               <div class="question-row">
+					               <div class="question-row custom-spacing">
 					                 <img class="avatar" src="/src/assets/human1.png">
-					                 <span class="question-text">{{ chat.HUMAN }}</span>
+					                 <span class="question-text custom-spacing">{{ chat.HUMAN }}</span>
 					               </div>
 					               
-								  <div v-if="chat.AI" class="answer-row">
+								  <div v-if="chat.AI" class="answer-row custom-spacing">
 									 <img class="avatar" src="/src/assets/GPT.png">
-									 <div class="answer-text" v-html="renderMarkdown(chat.AI)"></div>
+									 <div class="answer-text custom-spacing" v-html="renderMarkdown(chat.AI)"></div>
 								   </div>
 								   <div v-else-if="isLoading" class="loading-animation-box">
 										   <a-spin />
@@ -295,6 +295,16 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+html {
+    text-size-adjust: 100%;
+    font-feature-settings: normal;
+    font-family: Söhne, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-variation-settings: normal;
+    line-height: 1.5;
+    tab-size: 4;
+}
+
 .chat-container {
   display: flex;
   height: 100vh;
@@ -354,7 +364,7 @@ html, body {
 }
 .title-container {
   max-width: 150px; 
-  font-size: 12px;
+  font-size: 14px;
   white-space: nowrap; /* 防止文本换行 */
   overflow: hidden; /* 隐藏超出容器宽度的文本 */
   text-overflow: ellipsis; /* 在文本截断时显示省略号 */
@@ -445,11 +455,21 @@ html, body {
 }
 
 .question-text, .answer-text {
-	font-size: 14px;
+	font-size: 16px;
 	flex-grow: 1;
 	display: block;
 	width: 100%;
 	align-self: flex-start;
+	margin-bottom: 20px;
+}
+
+.custom-spacing {
+  letter-spacing: 1px;
+  line-height: 1.5;
+  text-align: justify;
+  p{
+	  margin-bottom: 15px;
+  }
 }
 
 .loading-animation-box {
