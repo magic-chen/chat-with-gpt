@@ -5,25 +5,32 @@
 		</el-avatar>
 		<a-button type="text" size="small" @click="showDrawer()">{{current_model_name}}</a-button>
 	</div>
-    <RobotList @item-clicked="handleItemClicked" ref="robotListRef"/> 
+    <div v-if="isShowDrawer">
+          <RobotList @item-clicked="handleItemClicked" ref="robotListRef"/>
+        </div>
 </template>
 
 
 <script setup lang="ts" >
-	import { ref, inject } from 'vue';
+	import { ref, inject, nextTick } from 'vue';
 	const current_model_id = inject('current_model_id')
 	const current_model_name = inject('current_model_name')
 	const props = defineProps(['customClass']);
 	const robotListRef = ref(null)
+	const isShowDrawer = ref(false)
 	
 	function showDrawer(){
-		if (robotListRef.value && (robotListRef.value as any).openDrawer) {
-		  (robotListRef.value as any).openDrawer();
-		}
+		isShowDrawer.value = true
+		nextTick(() => {
+			if (robotListRef.value && (robotListRef.value as any).openDrawer) {
+			  (robotListRef.value as any).openDrawer();
+			}
+		});
 	};
 	
 	function handleItemClicked(itemId:number, itemName: string){
 		console.log('Item clicked:', itemId, itemName);
+		
 	}
 </script>
 

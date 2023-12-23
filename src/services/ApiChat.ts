@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { apiConfig } from '@/config';
 
-export async function chat(id: number|undefined, user_id:string, input_text: string) {
+export async function chat(id: number|undefined, user_id:string, model_id: number, input_text: string) {
   try {
-    var data = JSON.stringify({"id":id, "user_id":user_id, "input_text":input_text})
+    var data = JSON.stringify({"id":id, "user_id":user_id, "model_id":model_id, "input_text":input_text})
 	console.log("chat request: ", data)
     var config = {
       method: 'post',

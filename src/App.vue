@@ -71,12 +71,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, provide } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, provide, watch } from 'vue'
+import { Model } from '@/types/Model';
+import { Conversation, Chat } from '@/types/Conversation';
 import MarkdownIt from 'markdown-it'
 import Cookies from 'js-cookie'
 import { v4 as uuidv4 } from 'uuid';
 import { getConversations, deleteConversation, CreateOrUpdateConversation } from '@/services/ApiConversations';
 import { chat } from '@/services/ApiChat';
+import { getUserInfo } from '@/services/ApiUser';
+import { getModels } from '@/services/ApiModel';
+
 
 const activeIndex = ref('0')
 const iconSize = ref(15)
@@ -97,15 +102,28 @@ const floatButton =  {
 }
 const current_model_id = ref(1)
 const current_model_name = ref("ChatGPT-3.5")
+const model_list = ref<Model[]>([])
 
 provide('current_model_id', current_model_id);
 provide('current_model_name', current_model_name);
 provide('userId', userId)
+provide('model_list', model_list)
 
-function renderMarkdown(text:string) {
-  const htmlContent = md.render(text);
-  return htmlContent;
-}
+const stopWatch = watch(current_model_id, (newVal, oldVal) => {
+      console.log('Current model ID changed:', newVal);
+      (async () => {
+        try {
+			selectedChats.value = []
+			
+			const data = await getConversations(userId.value, current_model_id.value);
+			conversations.value = data;
+			openChatConversation(undefined)
+		  
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      })();
+});
 
 onMounted(async () => {
 	try {
@@ -117,13 +135,31 @@ onMounted(async () => {
 		  userId.value = uuidv4()
 		  Cookies.set('userId', userId.value, { expires: 365 })
 		}
-
-	    const data = await getConversations(userId.value)
+		
+		//1. 现获取用户信息 新用户会注册后返回
+		const user = await getUserInfo(userId.value)
+		current_model_id.value = user.current_model_id
+		console.log("用户当前模型id: ", current_model_id.value)
+		
+		//2. 获取模型信息
+		const models = await getModels(userId.value);
+		const model_index = models.findIndex((Model) => Model.id === current_model_id.value);
+		current_model_name.value = models[model_index].name
+		console.log("用户当前模型name: ", current_model_name.value)
+		model_list.value = models
+		
+		
+		//3. 获取对话信息
+	    const data = await getConversations(userId.value, current_model_id.value)
 		conversations.value = data
 	} catch (error) {
 	    console.error('Error:', error);
 	}
-	openChatConversation(-1)
+	openChatConversation(undefined)
+});
+
+onBeforeUnmount(() => {
+      stopWatch();
 });
 
 
@@ -134,12 +170,17 @@ function scrollToBottom() {
   }
 }
 
+function renderMarkdown(text:string) {
+  const htmlContent = md.render(text);
+  return htmlContent;
+}
+
+
 async function handleNewChatClick(){
 	let newConversation: Conversation = await createNewConversaiton();
 	conversations.value.push(newConversation);
 	activeIndex.value = String(conversations.value.length-1)
 	console.log("当前被激活的index:", activeIndex.value)
-	// 设置新对话为选中状态
 	selectedConversation.value = [newConversation];
 	selectedChats.value = newConversation.chats;
 }
@@ -173,16 +214,15 @@ async function handleSubmit(){
 		return
 	}
 	
-	// console.log("此时对话为： ", JSON.stringify(selectedConversation.value))
-	//如果用户当前没有选中任何对话 创建一个对话
-	if(selectedConversation.value === undefined || selectedConversation.value[0].user_id === 'system'){
+	console.log("此时对话为： ", JSON.stringify(selectedConversation.value))
+	if(selectedConversation.value.length === 0 || selectedConversation.value[0].user_id === 'system'){
 		selectedConversation.value = [await createNewConversaiton()]
-		selectedConversation.value[0].chats.push({id: uuidv4(), HUMAN: inputQuestion.value, AI: ''})
+		selectedConversation.value[0].chats.push({HUMAN: inputQuestion.value, AI: ''})
 		selectedChats.value = selectedConversation.value[0].chats
 		conversations.value.push(selectedConversation.value[0]);
 		activeIndex.value = String(conversations.value.length-1)
 	}else {
-		selectedConversation.value[0].chats.push({id: uuidv4(), HUMAN: inputQuestion.value, AI: ''})
+		selectedConversation.value[0].chats.push({HUMAN: inputQuestion.value, AI: ''})
 		updateConversationInConversations(selectedConversation.value[0])
 	}
 	
@@ -196,7 +236,7 @@ async function handleSubmit(){
 	try {
 		isLoading.value = true;
 	    const [answer] = await Promise.all([
-	        chat(selectedConversation.value[0].id, userId.value, inputQuestion.value),
+	        chat(selectedConversation.value[0].id, userId.value, current_model_id.value, inputQuestion.value),
 	        inputQuestion.value = ''
 	    ]);
 	    updateAnswerInChats(answer);
@@ -210,17 +250,17 @@ async function handleSubmit(){
 
 async function createNewConversaiton(){
 	const title:string = default_conversation_title
-	let data = {
-	  id: undefined,
-	  user_id: userId.value,
-	  conversation_title: title,
-	  chats: [],
+	let conversation: Conversation = {
+		user_id: userId.value,
+		model_id: current_model_id.value,
+		conversation_title: title,
+		chats: []
 	};
-	let responseData = await CreateOrUpdateConversation(userId.value, JSON.stringify(data))
+	let responseData = await CreateOrUpdateConversation(userId.value, JSON.stringify(conversation))
 	if(responseData){
-		data.id = responseData.id
+		conversation.id = responseData.id
 	}
-	return data
+	return conversation
 }
 
 function openChatConversation(id: number|undefined) {
@@ -231,8 +271,9 @@ function openChatConversation(id: number|undefined) {
 		selectedConversation.value = conversations.value.filter(
 		(conversation) => conversation.user_id === 'system');
     }
-	console.log("selectedConversation",  JSON.stringify(selectedConversation.value))
-	selectedChats.value = selectedConversation.value[0].chats;
+	if(selectedConversation.value.length != 0){
+		selectedChats.value = selectedConversation.value[0].chats;
+	}
 }
 
 function deleteChatConversation(conversationIdToDelete: number|undefined){
@@ -449,27 +490,23 @@ html {
 	object-fit: cover;
 	border-radius: 20%;
 	overflow: hidden; 
-}
-.question-text{
-  white-space: pre-line;
+	
 }
 
 .question-text, .answer-text {
+	white-space: normal;
 	font-size: 16px;
-	flex-grow: 1;
-	display: block;
 	width: 100%;
-	align-self: flex-start;
-	margin-bottom: 20px;
 }
 
 .custom-spacing {
   letter-spacing: 1px;
   line-height: 1.5;
   text-align: justify;
-  p{
-	  margin-bottom: 15px;
-  }
+}
+.custom-spacing ol,
+.custom-spacing li {
+    margin-bottom: 15px !important;
 }
 
 .loading-animation-box {

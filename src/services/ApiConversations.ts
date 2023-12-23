@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { apiConfig } from '@/config';
 
-export async function getConversations(user_id: string): Promise<any[]> {
+export async function getConversations(user_id: string, model_id: number): Promise<any[]> {
   try {
-    const response = await axios.get(`${apiConfig.conversations}?user_id=${user_id}`);
-    return response.data;
+    const response = await axios.get(`${apiConfig.conversations}?user_id=${user_id}&model_id=${model_id}`);
+    return response.data.data.conversations;
   } catch (error) {
     console.error('Error fetching data:', error);
     throw error;
