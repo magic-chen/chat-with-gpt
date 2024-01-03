@@ -1,8 +1,7 @@
 version: '1.0.6'
 services:
   chat-with-gpt-frontend:
-    container_name:
-      chat-with-gpt-frontend
+    container_name: chat-with-gpt-frontend
     image: chat-with-gpt-frontend:${GIT_COMMIT_HASH}
     ports:
       - "8080:80"
@@ -13,3 +12,4 @@ services:
 
 volumes:
   avatars_volume:
+    external: true
