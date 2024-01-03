@@ -10,3 +10,6 @@ services:
       - avatars_volume:/usr/share/nginx/html/avatars
     environment:
       - GIT_COMMIT_HASH=${GIT_COMMIT_HASH}
+
+volumes:
+  avatars_volume:
