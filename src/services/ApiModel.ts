@@ -1,10 +1,22 @@
 import axios from 'axios';
 import { apiConfig } from '@/config';
+import { ModelRequest, Model } from '@/types/Model';
 
-export async function getModels(user_id: string): Promise<any[]> {
+
+export async function getModels(user_id: string, limit: number, offset: number): Promise<any[]> {
   try {
-    const response = await axios.get(`${apiConfig.models}?user_id=${user_id}`);
+    const response = await axios.get(`${apiConfig.models}?user_id=${user_id}&limit=${limit}&offset=${offset}`);
     return response.data.data.models;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error;
+  }
+}
+
+export async function getModelById(user_id: string, model_id: number): Promise<Model> {
+  try {
+    const response = await axios.get(`${apiConfig.model_by_id}?user_id=${user_id}&model_id=${model_id}`);
+    return response.data.data;
   } catch (error) {
     console.error('Error fetching data:', error);
     throw error;
@@ -36,3 +48,27 @@ export async function updateCurrentModel(user_id: string, model_id: number){
     console.error(error);
   }
 }
+
+export async function createModel(model_data: ModelRequest){
+  try {
+    const request = {
+      method: 'post',
+      url: `${apiConfig.create_model}`,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data: model_data
+    };
+  	console.log("create model request");
+  
+    const response = await axios(request);
+  	if(response.data.code === 200){
+  		console.log("create model response: ", response.data)
+  		return
+  	}
+    console.log(JSON.stringify(response.data));
+  } catch (error) {
+    console.error(error);
+  }
+}
+

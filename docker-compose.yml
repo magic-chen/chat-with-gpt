@@ -6,5 +6,7 @@ services:
     image: chat-with-gpt-frontend:${GIT_COMMIT_HASH}
     ports:
       - "8080:80"
+    volumes:
+      - avatars_volume:/usr/share/nginx/html/avatars
     environment:
       - GIT_COMMIT_HASH=${GIT_COMMIT_HASH}

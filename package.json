@@ -11,15 +11,18 @@
     "@fortawesome/fontawesome-free": "^6.5.1",
     "ant-design-vue": "^4.0.7",
     "axios": "^1.6.1",
-    "element-plus": "^2.4.1",
+    "crypto-js": "^4.2.0",
+    "element-plus": "^2.4.4",
     "js-cookie": "^3.0.5",
     "markdown-it": "^13.0.2",
     "openai": "^4.17.0",
     "uuid": "^9.0.1",
     "vue": "^3.3.8",
-    "vue-gravatar": "^1.4.1"
+    "vue-gravatar": "^1.4.1",
+    "vue-router": "^4.2.5"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.1",
     "@types/js-cookie": "^3.0.6",
     "@types/markdown-it": "^13.0.7",
     "@types/uuid": "^9.0.7",
