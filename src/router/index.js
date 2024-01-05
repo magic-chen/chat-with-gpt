@@ -8,7 +8,7 @@ const routes = [
   {
     path: '/',
     name: 'index',
-    component: Chat,
+    component: Prompts,
   },
   {
     path: '/chat',
@@ -23,6 +23,11 @@ const routes = [
   {
     path: '/prompts/create',
     name: 'PromptCreate',
+    component: PromptCreate,
+  },
+  {
+    path: '/prompts/edit/:id',
+    name: 'PromptEdit',
     component: PromptCreate,
   },
 ];

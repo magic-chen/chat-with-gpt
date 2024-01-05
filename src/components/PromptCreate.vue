@@ -19,7 +19,7 @@
                     :action="apiConfig.upload_avatar"
                     :on-success="handleAvatarSuccess"
                     :before-upload="beforeAvatarUpload">
-                    <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                    <img v-if="modelData.src" :src="modelData.src" class="avatar">
 					<el-icon v-else class="avatar-uploader-icon"><Camera /></el-icon>
                   </el-upload>
                 </div>
@@ -27,7 +27,7 @@
                 <div class="form-item">
                   <label for="name">名字</label>
                   <el-input 
-                      v-model="name" 
+                      v-model="modelData.name" 
                       maxlength="10" 
                       show-word-limit 
                       placeholder="给它起一个名字">
@@ -36,24 +36,31 @@
                 
                 <div class="form-item">
                   <label for="type">类型</label>
-                  <el-select v-model="type" placeholder="请选择">
+                  <el-select v-model="modelData.type" placeholder="请选择">
                   	<el-option v-for="t in typesConfig" :key="t" :label="t" :value="t" />
                   </el-select>
                 </div>
     
                 <div class="form-item">
                   <label for="description">描述</label>
-                  <el-input v-model="description"  maxlength="50" show-word-limit placeholder="简单描述下它是什么"></el-input>
+                  <el-input v-model="modelData.description"  maxlength="50" show-word-limit placeholder="简单描述下它是什么"></el-input>
                 </div>
     
                 <div class="form-item">
                   <label for="prompt">提示词</label>
-                  <el-input type="textarea" :rows="5" v-model="prompt" placeholder="用你自己的提示词来告诉模型, 它可以做什么, 不能做什么？"></el-input>
+                  <el-input type="textarea" :rows="5" v-model="modelData.prompt" placeholder="用你自己的提示词来告诉模型, 它可以做什么, 不能做什么？"></el-input>
                 </div>
     
                 <div class="form-item">
                   <label for="introduction">开场白</label>
-                  <el-input type="textarea" :rows="3" v-model="introduction" placeholder="跟使用者打招呼, 用具体的例子来说明如何使用"></el-input>
+                  <el-input type="textarea" :rows="5" v-model="modelData.introduce" placeholder="跟使用者打招呼, 用具体的例子来说明如何使用"></el-input>
+                </div>
+                
+                <div class="form-item">
+                  <label for="type">发布设置</label>
+                  <el-select v-model="publish_options_key" placeholder="请选择">
+                  	<el-option v-for="option in computed_publish_options" :key="option" :label="option" :value="option" />
+                  </el-select>
                 </div>
             </el-col>
             
@@ -67,23 +74,62 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed} from 'vue';
+import { ref, computed, onMounted, reactive} from 'vue';
 import { useRouter } from 'vue-router';
+import Cookies from 'js-cookie'
+import { v4 as uuidv4 } from 'uuid';
+import { useStore } from 'vuex';
 import { apiConfig, typesConfig } from '@/config';
-import {createModel} from '@/services/ApiModel';
-import { ModelRequest } from '@/types/Model';
-
+import {createModel, updateModel} from '@/services/ApiModel';
+import { ModelRequest ,Model} from '@/types/Model';
+import { ElMessage } from 'element-plus';
 
 
 const router = useRouter();
-const type = ref('')
-const name = ref('')
-const description = ref('');
-const prompt = ref('');
-const introduction = ref('');
-const imageUrl = ref('');
+const store = useStore();
+const modelId = router.currentRoute.value.params.id;
+const userId = ref<string>('');
+
+const modelData = reactive<Model>({
+  created_at: '',
+  updated_at: '',
+  type: '',
+  icon: '',
+  src: '',
+  id: 0,
+  name: '',
+  prompt: '',
+  description: '',
+  publish_type: '',
+  introduce: '',
+  is_favorite: false
+});
 const canPublish = computed(() => {
-      return !name.value || !type.value|| !prompt.value || !imageUrl.value;
+      return !modelData.name || !modelData.type|| !modelData.prompt || !modelData.src || !modelData.publish_type;
+});
+type StringDict = {
+  [key: string]: string;
+};
+const publish_options_key = ref('仅自己可见')
+const publish_options: StringDict = {
+    "仅自己可见":"private",
+    "对外公开发布":"public",
+};
+
+const computed_publish_options = computed(() => {
+    return Object.keys(publish_options);
+});
+
+onMounted(async () => {
+    const cookieUserId = Cookies.get('userId');
+	
+	if (cookieUserId !== undefined) {
+	  userId.value = cookieUserId;
+	} else {
+	  userId.value = uuidv4()
+	  Cookies.set('userId', userId.value, { expires: 365 })
+	}
+    loadPromptData()
 });
 
 
@@ -93,17 +139,40 @@ function goBack(){
 
 async function publish(){
     let model: ModelRequest = {
-        type: type.value,
-        icon: '',
-        src: imageUrl.value,
-        name: name.value,
-        prompt: prompt.value,
-        description: description.value,
-        publish_type: 'public',
-        introduce: introduction.value,
+        type: modelData.type,
+        icon: modelData.icon,
+        src: modelData.src,
+        name: modelData.name,
+        prompt: modelData.prompt,
+        description: modelData.description,
+        publish_type: publish_options[publish_options_key.value],
+        introduce: modelData.introduce,
     }
-    await createModel(model);
+    if(modelId){
+        await updateModel(Number(modelId), modelData)
+    }else{
+        await createModel(userId.value, model);
+    }
 }
+
+async function loadPromptData(){
+  if (modelId) {
+    const data = await store.dispatch('model/getModel');
+    
+    modelData.created_at = data.created_at;
+    modelData.updated_at = data.updated_at;
+    modelData.type = data.type;
+    modelData.icon = data.icon;
+    modelData.src = data.src;
+    modelData.id = data.id;
+    modelData.name = data.name;
+    modelData.prompt = data.prompt;
+    modelData.description = data.description;
+    modelData.publish_type = data.publish_type;
+    modelData.introduce = data.introduce;
+    modelData.is_favorite = data.is_favorite;
+  }
+};
 
 function beforeAvatarUpload(file: any) {
     const isJPG = file.type === 'image/jpeg';
@@ -120,14 +189,32 @@ function beforeAvatarUpload(file: any) {
         ElMessage.error('上传头像图片大小不能超过 2MB!');
         return false;
     }
-    
-    return true;
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            const width = img.naturalWidth;
+            const height = img.naturalHeight;
+            URL.revokeObjectURL(img.src);
+            
+            if (width < 100 || height < 100 || width > 1024 || height > 1024) {
+                ElMessage.error('头像图片尺寸必须在 80x80 至 1024x1024 像素之间!');
+                resolve(false);
+            } else {
+                resolve(true);
+            }
+        };
+        img.onerror = () => {
+            ElMessage.error('无法读取图片，请确保上传的是有效的图片文件!');
+            resolve(false);
+        };
+    });
 }
 
 
 function handleAvatarSuccess(response: any, file: any) {
     const fileUrl = response.data.url;
-    imageUrl.value = fileUrl;
+    modelData.src = fileUrl;
     console.log(`upload response url: ${fileUrl}`);
     ElMessage.success('上传头像成功!');
 }
@@ -158,7 +245,7 @@ function handleAvatarSuccess(response: any, file: any) {
 
 .prompt-create-main {
 	width: 100%;
-	height: 100vh;
+	height: 90vh;
 	display: flex;
 	flex-direction: row;
 	padding: 0;
@@ -166,7 +253,8 @@ function handleAvatarSuccess(response: any, file: any) {
 
 .config-section {
 	min-width: 300px;
-	height: 100%;
+    max-width: 500px;
+	height: 90vh;
 	border-right: 1px solid var(--gray-200);
 	padding: 15px;
 }
@@ -177,19 +265,28 @@ function handleAvatarSuccess(response: any, file: any) {
 }
 
 .avatar-uploader {
-	display: flex;
-	flex-direction: center;
-	justify-content: center;
+    display: flex;
+    align-self: center;
+    justify-content: center;
+    max-height: 100px;
+    margin: 10px;
 }
 
 .avatar-uploader-icon {
-    font-size: 40px;
+    font-size: 30px;
     color: #8c939d;
-    width: 160px;
-    height: 160px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     border: 1px solid var(--gray-200);
     text-align: center;
+}
+
+.avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .form-item {
@@ -202,19 +299,6 @@ function handleAvatarSuccess(response: any, file: any) {
   margin-bottom: 10px;
 }
 
-.avatar-uploader {
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-.avatar-uploader-icon {
-}
-
-.avatar {
-  width: 100%;
-  height: auto;
-  border-radius: 50%;
-}
 
 .test-section {
 	height: 100%;

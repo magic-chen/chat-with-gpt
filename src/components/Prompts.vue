@@ -44,7 +44,10 @@
 			          :size="40" 
 			          shape="circle" 
 			          :style="{ backgroundColor: getColorForTitle(card.name) }">
-			          <img :src="card.src" style="width: 50%; height: 50%; object-fit: cover;" />
+			          <img 
+                        :size="40"
+                        :src="card.icon ? card.icon : card.src" 
+                        :style="card.icon ? 'width: 50%; height: 50%;object-fit: cover;' : 'width: 110%; height: 110%;object-fit: cover;'" />
 			        </el-avatar>
 			        <div class="card-details">
 			          <h3 class="card-title">{{ card.name }}</h3>
@@ -52,14 +55,17 @@
 			        </div>
 			      </div>
 			      <div class="card-icons">
-			          <el-icon @click="onChatClick(card)"><ChatRound /></el-icon>
-						<a-space v-if="card.is_favorite" @click="onStarClick(card)"> 
-							<StarFilled style="color: #FFD700; font-size: 20px;"/>
+						<a-space v-if="card.publish_type === 'public' && card.is_favorite"> 
+							<StarFilled style="color: #FFD700; font-size: 20px;"  @click="onStarClick(card)"/>
 						</a-space>
 			            
-						<a-space v-else @click="onStarClick(card)">
-							<StarOutlined style=" font-size: 20px;"/>
+						<a-space v-else-if="card.publish_type === 'public' && !card.is_favorite">
+							<StarOutlined style=" font-size: 20px;"  @click="onStarClick(card)"/>
 						</a-space>
+                        <a-space v-else-if="card.publish_type === 'private'">
+                        	<FormOutlined style="font-size: 20px; cursor: pointer; margin-left: 10px;margin-right: 100px;" @click="onEditClick(card)"/>
+                            <DeleteOutlined style="font-size: 20px; cursor: pointer;" @click="onDeleteClick(card)"/>
+                        </a-space>
 			       </div>
 			    </div>
 				<div v-if="loading">
@@ -76,35 +82,40 @@
 <script lang="ts" setup>
 import { ref, onMounted, inject, computed, reactive, provide } from 'vue';
 import Cookies from 'js-cookie'
-import { getModels } from '@/services/ApiModel';
-import { setFavoriteModel, getFavoriteModels } from '@/services/ApiFavoriteModel';
+import { getModels, deleteModel, updateModel } from '@/services/ApiModel';
+import { getUserModels } from '@/services/ApiUserModel';
 import { maxCardReturn, typesConfig } from '@/config';
 import { v4 as uuidv4 } from 'uuid';
 import { Model } from '@/types/Model';
-import { StarFilled , StarOutlined} from '@ant-design/icons-vue';
+import { StarFilled , StarOutlined, FormOutlined , DeleteOutlined} from '@ant-design/icons-vue';
 import { useRouter } from 'vue-router';
 import { getColorForTitle } from '@/utils/utils';
+import image1 from '/src/assets/prompt_bg2.png';
+import image2 from '/src/assets/prompt_bg2.png';
+import { useStore } from 'vuex';
 
-
+const images = ref([image1, image2]);
 const router = useRouter();
-const userId = ref<string>(inject('userId') as string);
+const store = useStore();
+const userId = ref<string>('');
 const activeTab = ref('全部');
 const input_text = ref('');
 const loading = ref(false);
 const hasMore = ref(true);
 const offset = ref(0);
-const tabs = ref(['我的', '全部', ...typesConfig]);
-const images = ref([
-  '/src/assets/prompt_bg2.png', 
-  '/src/assets/prompt_bg2.png', 
-  ]);
+const tabs = ref(['我的', '全部', '收藏', ...typesConfig]);
+
 const cards = reactive<Model[]>([]);
-const favoriteCards = reactive<Model[]>([]);
+const userCards = reactive<Model[]>([]);
 const filteredCards = computed(() => {
 	if (activeTab.value === '全部') {
 		return filterWithSearchInput(cards);
-	}else if(activeTab.value == '我的'){
-		return filterWithSearchInput(favoriteCards);
+	}else if(activeTab.value == '收藏'){
+		let cardData = cards.filter(card => card.is_favorite === true);
+		return filterWithSearchInput(cardData);
+	}
+    else if(activeTab.value == '我的'){
+		return filterWithSearchInput(userCards);
 	}else{
 		let cardData = cards.filter(card => card.type === activeTab.value);
 		return filterWithSearchInput(cardData);
@@ -115,7 +126,8 @@ const options = computed(() => {
         .filter(card => card.name.toLowerCase().includes(input_text.value.toLowerCase()))
         .map(card => ({ value: card.name }));
 });
-provide('userId', userId);
+
+
 
 onMounted(async () => {
 	const cookieUserId = Cookies.get('userId');
@@ -126,8 +138,8 @@ onMounted(async () => {
 	  userId.value = uuidv4()
 	  Cookies.set('userId', userId.value, { expires: 365 })
 	}
-	await loadFavoriteCards();
-    loadMoreModels();
+	await loadUserCards();
+    await loadMoreModels();
 });
 
 function filterWithSearchInput(cardSource: Model[]){
@@ -138,23 +150,18 @@ function filterWithSearchInput(cardSource: Model[]){
 }
 
 async function loadMoreModels() {
-	console.log("load data")
 	const limit = maxCardReturn;
 	if (loading.value || !hasMore.value) {
 		return;
 	}
 
 	loading.value = true;
-	console.log(`set loading value: ${loading.value}`)
 	
 	try {
 		const newCards = await getModels(userId.value, limit, offset.value);
 		if (newCards.length < limit) {
 		  hasMore.value = false;
 		}
-		newCards.forEach(card => {
-		    card.is_favorite = favoriteCards.some(favCard => favCard.id === card.id);
-		  });
 		cards.push(...newCards);
 		offset.value += limit;
 	} catch (error) {
@@ -162,20 +169,15 @@ async function loadMoreModels() {
 		hasMore.value = false;
 	} finally {
 		loading.value = false;
-		console.log(`set loading value: ${loading.value}`)
 	}
 }
 
-async function loadFavoriteCards() {
+async function loadUserCards() {
 	try {
-		const models = await getFavoriteModels(userId.value, maxCardReturn);
-		favoriteCards.splice(0, favoriteCards.length, ...models);
-
-		favoriteCards.forEach(card => {
-		    card.is_favorite = true;
-		});
+		const models = await getUserModels(userId.value, maxCardReturn);
+		userCards.splice(0, userCards.length, ...models);
 	} catch (error) {
-		console.error('Error loading favorite models:', error);
+		console.error('Error loading user models:', error);
 	}
 }
 
@@ -187,38 +189,38 @@ function onSelect(){
 	console.log(`input is : ${input_text.value}`)
 }
 
+function onEditClick(card: Model){
+    store.dispatch('model/setModel', card);
+    router.push({ path: `/prompts/edit/${card.id}` });
+}
+
+async function onDeleteClick(card: Model){
+    await deleteModel(card.id)
+    removeCardById(card.id)
+}
+
 function onChatClick(card: Model) {
-	console.log("click chat icon")
+	// console.log(`click card ${card.id}`)
 	// router.push({ path: '/chat', query: { 'model_id': card.id } });
 }
 
 async function onStarClick(card: Model) {
-	await setFavoriteModel(userId.value, card.id)
-	card.is_favorite = !card.is_favorite
-	
-	
-	favoriteCards.forEach(favCard => {
-	if (favCard.id === card.id) {
-	  favCard.is_favorite = card.is_favorite;
-	}
-	});
-	
-	cards.forEach(allCard => {
-	if (allCard.id === card.id) {
-	  allCard.is_favorite = card.is_favorite;
-	  console.log(`change the all cards to ${allCard.is_favorite}`)
-	}
-	});
-	console.log("favorite cards", JSON.stringify(favoriteCards))
-	console.log("all cards", JSON.stringify(cards))
+    card.is_favorite = !card.is_favorite;
+	await updateModel(card.id, card)
 }
 
 function onTabClick(tabInfo: any){
-	console.log(`clicked tab , activetab is ${tabInfo.props['name']}`)
 	if(tabInfo.props['name'] === '我的'){
-		loadFavoriteCards()
+		loadUserCards()
 	}
 }
+
+const removeCardById = (id: number) => {
+  const index = cards.findIndex(card => card.id === id);
+  if (index !== -1) {
+    cards.splice(index, 1);
+  }
+};
 </script>
 
 <style>
@@ -284,7 +286,7 @@ function onTabClick(tabInfo: any){
 	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 25px;
-	padding: 20px;
+	padding: 10px;
 	max-height: 700px;
 }
 
@@ -294,6 +296,7 @@ function onTabClick(tabInfo: any){
 	justify-content: space-between;
 	flex-direction: column;
     margin-top: 25px;
+    min-height: 60px;
 }
 
 .card {
@@ -308,19 +311,21 @@ function onTabClick(tabInfo: any){
 	justify-content: space-between;
 	padding: 10px;
 	box-sizing: border-box;
-	cursor: pointer;
+	min-height: 100px;
 }
 
 .card-top {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
 }
 
 .card-avatar {
-  min-width: 42px;
-  min-height: 42px;
-  border-radius: 50%;
-  margin-right: 15px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
 }
 
 .card-details {
@@ -334,27 +339,28 @@ function onTabClick(tabInfo: any){
 }
 
 .card-title {
-  color: var(--text-primary);
-  font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 5px;
+    color: var(--text-primary);
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 5px;
 }
 
 .card-description {
-  font-size: 12px;
-  color: var(--text-secondary);
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
 .card-icons {
-  display: flex;
-  justify-content: left;
-  gap: 80px;
-  margin-top: 10px;
-  padding-top: 7px;
-  padding-left: 10px;
-  min-height: 20px;
-  font-size: 20px;
-  border-top: 2px solid var(--gray-100); /* 添加分界线 */
-  color: var(--gray-300);
+    display: flex;
+    justify-content: left;
+    gap: 80px;
+    margin-top: 10px;
+    padding-top: 7px;
+    padding-left: 10px;
+    min-height: 20px;
+    font-size: 20px;
+    border-top: 2px solid var(--gray-100); /* 添加分界线 */
+    color: var(--gray-300);
 }
+
 </style>

@@ -21,19 +21,16 @@
 						  :title="item.name"
 						>
 							<div class="card-item">
-								<el-avatar 
-									v-if="item.icon" 
-									:icon="item.icon" 
-									:size="40" 
-									shape="circle" 
-									class="card-avatar"
-									:style="{ backgroundColor: getColorForTitle(item.name) }"							
-								>
-									
-								</el-avatar>
-								<el-avatar v-else  :size="40" shape="circle" :style="{ backgroundColor: getColorForTitle(item.name)  }">
-									  <img :src="item.src" style="width: 50%; height: 50%; object-fit: cover;" />
-								</el-avatar>
+                                <el-avatar
+                                  class="card-avatar" 
+                                  :size="40" 
+                                  shape="circle" 
+                                  :style="{ backgroundColor: getColorForTitle(item.name) }">
+                                  <img 
+                                    :size="40"
+                                    :src="item.icon ? item.icon : item.src" 
+                                    :style="item.icon ? 'width: 50%; height: 50%;object-fit: cover;' : 'width: 110%; height: 110%;object-fit: cover;'" />
+                                </el-avatar>
 								<div class="card-item-title">{{ item.name }}</div>
 							</div>
 						</el-menu-item>
@@ -132,7 +129,7 @@ defineExpose({
 
 .el-icon {
   margin-right: 0!important;
-  font-size: 20px !important;
+  font-size: 18px !important;
 }
 
 .el-menu-item-Modellist {
@@ -154,14 +151,15 @@ defineExpose({
 	align-items: center; 
 	vertical-align: middle;
 	width: 100%;
-	gap: 10px;
+	gap: 8px;
 	flex: 1;
 	text-align: center;
+    overflow-x: hidden;
 }
 
 .card-avatar {
 	text-align: center;
-	font-size: 20px;
+	font-size: 18px;
 	display: flex;
 	align-items: center;
 	justify-content: center;

@@ -3,7 +3,7 @@ import { apiConfig } from '@/config';
 import { ModelRequest, Model } from '@/types/Model';
 
 
-export async function getModels(user_id: string, limit: number, offset: number): Promise<any[]> {
+export async function getModels(user_id: string, limit: number, offset: number): Promise<Model[]> {
   try {
     const response = await axios.get(`${apiConfig.models}?user_id=${user_id}&limit=${limit}&offset=${offset}`);
     return response.data.data.models;
@@ -49,7 +49,7 @@ export async function updateCurrentModel(user_id: string, model_id: number){
   }
 }
 
-export async function createModel(model_data: ModelRequest){
+export async function createModel(user_id:string, model_data: ModelRequest){
   try {
     const request = {
       method: 'post',
@@ -57,13 +57,61 @@ export async function createModel(model_data: ModelRequest){
       headers: {
         'Content-Type': 'application/json'
       },
-      data: model_data
+      data: {
+          "user_id": user_id,
+          "model": model_data
+      }
     };
   	console.log("create model request");
   
     const response = await axios(request);
   	if(response.data.code === 200){
   		console.log("create model response: ", response.data)
+  		return
+  	}
+    console.log(JSON.stringify(response.data));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function updateModel(model_id: number, model_data: Model){
+  try {
+    const request = {
+      method: 'put',
+      url: `${apiConfig.update_model}/${model_id}`,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data: model_data
+    };
+  	console.log("update model request");
+  
+    const response = await axios(request);
+  	if(response.data.code === 200){
+  		console.log("update model response: ", response.data)
+  		return
+  	}
+    console.log(JSON.stringify(response.data));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function deleteModel(model_id: number){
+  try {
+    const request = {
+      method: 'delete',
+      url: `${apiConfig.delete_model}/${model_id}`,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+  	console.log("delete model request");
+  
+    const response = await axios(request);
+  	if(response.data.code === 200){
+  		console.log("delete model response: ", response.data)
   		return
   	}
     console.log(JSON.stringify(response.data));

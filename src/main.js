@@ -10,12 +10,14 @@ import FloatButton from './components/FloatButton.vue'
 import RobotList from './components/RobotList.vue'
 import ChatTest from './components/ChatTest.vue'
 import router from './router';
+import store from './store';
 
 
 const app = createApp(App);
 app.config.globalProperties.axios = axios;
 app.use(ElementPlus);
 app.use(router);
+app.use(store);
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
