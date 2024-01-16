@@ -13,4 +13,4 @@ export interface Model {
   is_favorite: boolean;
 };
 
-export interface ModelRequest extends Omit<Model, 'is_favorite' | 'id' | 'created_at' | 'updated_at'> {}
+export interface ModelRequest extends Omit<Model,  'is_favorite'| 'id' | 'created_at' | 'updated_at'> {}

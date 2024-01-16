@@ -7,7 +7,7 @@
 	</div>
     <div v-if="isShowDrawer">
           <RobotList @item-clicked="handleItemClicked" ref="robotListRef"/>
-        </div>
+    </div>
 </template>
 
 

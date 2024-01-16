@@ -15,6 +15,7 @@
 				</div>
 		</div>
 		<el-input
+            v-if="props.modelId"
 			v-model="inputQuestion"
 			@keydown="handleKeyDown"
 			@compositionstart="handleCompositionStart"
@@ -30,20 +31,36 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, nextTick, provide, watch, inject } from 'vue'
+import { ref, onMounted, nextTick, watchEffect} from 'vue'
 import { Chat } from '@/types/Conversation';
 import { chatTest } from '@/services/ApiChat';
 import { renderMarkdown, scrollToBottom } from '@/utils/utils'
-
 import Cookies from 'js-cookie'
 import { v4 as uuidv4 } from 'uuid';
+
+
 const userId = ref('')
-const modelId = 1;
+const props = defineProps({
+  modelId: {
+    type: Number,
+    required: false
+  }
+});
 const testConversationId = ref(uuidv4());
 const selectedChats = ref<Chat[]>([]);
 const inputQuestion = ref('');
 const isLoading = ref(false);
 const inComposition = ref(false)
+
+watchEffect(() => {
+    if(props.modelId){
+        console.log('modelId has changed:', props.modelId);
+        
+    }else{
+         console.log('modelId has not changed:', props.modelId);
+    }
+  // 在这里，您可以根据 modelId 的变化执行任何需要的逻辑
+});
 
 onMounted(async () => {
 	const cookieUserId = Cookies.get('userId');
@@ -93,7 +110,7 @@ async function handleSubmit(){
 		isLoading.value = true;
         selectedChats.value.push({HUMAN: inputQuestion.value, AI: ''})
 	    const [answer] = await Promise.all([
-	        chatTest(testConversationId.value, userId.value, modelId, inputQuestion.value),
+	        chatTest(testConversationId.value, userId.value, Number(props.modelId), inputQuestion.value),
 	        inputQuestion.value = '' 
 	    ]);
 	    updateAnswerInChats(answer);

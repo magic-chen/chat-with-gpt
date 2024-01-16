@@ -67,7 +67,7 @@ export async function createModel(user_id:string, model_data: ModelRequest){
     const response = await axios(request);
   	if(response.data.code === 200){
   		console.log("create model response: ", response.data)
-  		return
+  		return response.data.data["model_id"]
   	}
     console.log(JSON.stringify(response.data));
   } catch (error) {
@@ -75,7 +75,7 @@ export async function createModel(user_id:string, model_data: ModelRequest){
   }
 }
 
-export async function updateModel(model_id: number, model_data: Model){
+export async function updateModel(model_id: number, model_data: ModelRequest){
   try {
     const request = {
       method: 'put',

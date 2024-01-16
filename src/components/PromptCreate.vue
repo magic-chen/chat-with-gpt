@@ -65,7 +65,7 @@
             </el-col>
             
             <el-col :span="16" class="test-section">
-                <ChatTest></ChatTest>
+                <ChatTest :model-id="modelId"></ChatTest>
                         
             </el-col>
           </el-row>
@@ -87,7 +87,7 @@ import { ElMessage } from 'element-plus';
 
 const router = useRouter();
 const store = useStore();
-const modelId = router.currentRoute.value.params.id;
+const modelId = ref(router.currentRoute.value.params.id);
 const userId = ref<string>('');
 
 const modelData = reactive<Model>({
@@ -105,7 +105,9 @@ const modelData = reactive<Model>({
   is_favorite: false
 });
 const canPublish = computed(() => {
-      return !modelData.name || !modelData.type|| !modelData.prompt || !modelData.src || !modelData.publish_type;
+      let result =  !modelData.name || !modelData.type || !modelData.prompt || !modelData.src;
+      console.log(`name: ${!modelData.name}\ntype ${!modelData.name}\n prompt ${!modelData.prompt}\n src ${!modelData.src}\n `);
+      return result;
 });
 type StringDict = {
   [key: string]: string;
@@ -148,15 +150,21 @@ async function publish(){
         publish_type: publish_options[publish_options_key.value],
         introduce: modelData.introduce,
     }
-    if(modelId){
-        await updateModel(Number(modelId), modelData)
+    if(modelId.value){
+        await updateModel(Number(modelId.value), model)
     }else{
-        await createModel(userId.value, model);
+        console.log(`发布前model id 为${modelId.value}`)
+        modelId.value = await createModel(userId.value, model);
+        if(modelId.value){
+            ElMessage.success("发布成功")
+        }else{
+            ElMessage.error("发布失败")
+        }
     }
 }
 
 async function loadPromptData(){
-  if (modelId) {
+  if (modelId.value) {
     const data = await store.dispatch('model/getModel');
     
     modelData.created_at = data.created_at;
@@ -226,6 +234,7 @@ function handleAvatarSuccess(response: any, file: any) {
 .el-container-parent{
     display: flex;
     flex-direction: column;
+    overflow-y: hidden;
 }    
     
 .prompt-create-header{
@@ -249,6 +258,7 @@ function handleAvatarSuccess(response: any, file: any) {
 	display: flex;
 	flex-direction: row;
 	padding: 0;
+    overflow: hidden;
 }
 
 .config-section {
@@ -257,6 +267,7 @@ function handleAvatarSuccess(response: any, file: any) {
 	height: 90vh;
 	border-right: 1px solid var(--gray-200);
 	padding: 15px;
+    overflow-y: hidden; 
 }
 
 .config-area {
@@ -301,11 +312,12 @@ function handleAvatarSuccess(response: any, file: any) {
 
 
 .test-section {
-	height: 100%;
+	height: 80vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 50px;
+    overflow-y: auto; 
 }
 
 .test-chat-input {

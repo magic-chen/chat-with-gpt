@@ -1,16 +1,20 @@
 <template>
   <el-container>
     <el-header class="el-header">
+      <div class="button-container">
+          <el-button type="success" @click="clickLogin">登录</el-button>
+          
+      </div>
       <el-carousel class="el-carousel" :interval=9000>
         <el-carousel-item v-for="image in images" :key="image">
           <img :src="image" style="width: 100%; height: 100%; object-fit: cover;">
         </el-carousel-item>
       </el-carousel>
     </el-header>
-
+    
     
     <el-main class="el-main">
-		
+        <Login v-model:open="isLoginDialogVisible" />
 		<el-autocomplete
 		    class="search-box"
 		    v-model="input_text"
@@ -41,7 +45,7 @@
 			      <div class="card-top" @click="onChatClick(card)">
 			        <el-avatar 
 			          class="card-avatar" 
-			          :size="40" 
+			          :size="50" 
 			          shape="circle" 
 			          :style="{ backgroundColor: getColorForTitle(card.name) }">
 			          <img 
@@ -80,10 +84,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, inject, computed, reactive, provide } from 'vue';
+import { ref, onMounted, computed, reactive } from 'vue';
 import Cookies from 'js-cookie'
-import { getModels, deleteModel, updateModel } from '@/services/ApiModel';
-import { getUserModels } from '@/services/ApiUserModel';
+import { getModels, deleteModel,  } from '@/services/ApiModel';
+import { deleteUserModel, getUserModels, setModelFavorite } from '@/services/ApiUserModel';
 import { maxCardReturn, typesConfig } from '@/config';
 import { v4 as uuidv4 } from 'uuid';
 import { Model } from '@/types/Model';
@@ -102,17 +106,18 @@ const activeTab = ref('全部');
 const input_text = ref('');
 const loading = ref(false);
 const hasMore = ref(true);
+const isLoginDialogVisible = ref(false);
 const offset = ref(0);
 const tabs = ref(['我的', '全部', '收藏', ...typesConfig]);
 
 const cards = reactive<Model[]>([]);
 const userCards = reactive<Model[]>([]);
+const favoriteCards = reactive<Model[]>([]);
 const filteredCards = computed(() => {
 	if (activeTab.value === '全部') {
 		return filterWithSearchInput(cards);
 	}else if(activeTab.value == '收藏'){
-		let cardData = cards.filter(card => card.is_favorite === true);
-		return filterWithSearchInput(cardData);
+		return filterWithSearchInput(favoriteCards);
 	}
     else if(activeTab.value == '我的'){
 		return filterWithSearchInput(userCards);
@@ -138,8 +143,8 @@ onMounted(async () => {
 	  userId.value = uuidv4()
 	  Cookies.set('userId', userId.value, { expires: 365 })
 	}
-	await loadUserCards();
     await loadMoreModels();
+    loadUserCardsByType('favorite')
 });
 
 function filterWithSearchInput(cardSource: Model[]){
@@ -147,6 +152,11 @@ function filterWithSearchInput(cardSource: Model[]){
 		return cardSource.filter(card => card.name.toLowerCase().includes(input_text.value.toLowerCase()));
 	}
 	return cardSource
+}
+
+function clickLogin() {
+    isLoginDialogVisible.value = true;
+    console.log(`click login,  isLogin value : ${isLoginDialogVisible.value}`)
 }
 
 async function loadMoreModels() {
@@ -172,10 +182,25 @@ async function loadMoreModels() {
 	}
 }
 
-async function loadUserCards() {
+async function loadUserCardsByType(type: string) {
+    //考虑到用户自己创建的模型数量有限，这里不做分段拉取
+    const limit = 100;
 	try {
-		const models = await getUserModels(userId.value, maxCardReturn);
-		userCards.splice(0, userCards.length, ...models);
+		const models = await getUserModels(userId.value, limit, type);
+		if(type === 'create'){
+            userCards.splice(0, userCards.length, ...models);
+        }else if(type === 'favorite'){
+            favoriteCards.splice(0, favoriteCards.length, ...models);
+            favoriteCards.forEach(card => {
+              card.is_favorite = true;
+            });
+            const favoriteIds = new Set(favoriteCards.map(card => card.id));
+            cards.forEach(card => {
+              if (favoriteIds.has(card.id)) {
+                card.is_favorite = true;
+              }
+            });
+        }
 	} catch (error) {
 		console.error('Error loading user models:', error);
 	}
@@ -190,6 +215,7 @@ function onSelect(){
 }
 
 function onEditClick(card: Model){
+    console.log("store model", JSON.stringify(card))
     store.dispatch('model/setModel', card);
     router.push({ path: `/prompts/edit/${card.id}` });
 }
@@ -200,53 +226,72 @@ async function onDeleteClick(card: Model){
 }
 
 function onChatClick(card: Model) {
-	// console.log(`click card ${card.id}`)
-	// router.push({ path: '/chat', query: { 'model_id': card.id } });
+	console.log(`click card ${card.id}`)
+	router.push({ path: '/chat', query: { 'model_id': card.id } });
 }
 
 async function onStarClick(card: Model) {
     card.is_favorite = !card.is_favorite;
-	await updateModel(card.id, card)
+    cards.forEach(ca => {
+        if(ca.id === card.id){
+            ca.is_favorite = card.is_favorite
+        }
+    })
+    if(card.is_favorite){
+        await setModelFavorite(userId.value, card.id, 'favorite')
+    }else{
+        const newFavoriteCards = favoriteCards.filter(ca => ca.id !== card.id);
+        favoriteCards.splice(0, favoriteCards.length, ...newFavoriteCards);
+        await deleteUserModel(userId.value, card.id)
+    }
 }
 
-function onTabClick(tabInfo: any){
+async function onTabClick(tabInfo: any){
 	if(tabInfo.props['name'] === '我的'){
-		loadUserCards()
-	}
+		await loadUserCardsByType('create');
+	}else if(tabInfo.props['name'] === '收藏'){
+        await loadUserCardsByType('favorite');
+    }
 }
 
 const removeCardById = (id: number) => {
-  const index = cards.findIndex(card => card.id === id);
+  const index = userCards.findIndex(card => card.id === id);
   if (index !== -1) {
-    cards.splice(index, 1);
+    userCards.splice(index, 1);
   }
 };
 </script>
 
 <style>
-	
 .el-header {
-	background-color: var(--primary);
-	width: 100%;
-	height: 380px;
-	padding: 0px;
-	position: relative;
+    background-color: var(--primary);
+    width: 100%;
+    height: 380px;
+    padding: 0px;
+    position: relative; 
+}
+
+.button-container {
+    position: absolute; 
+    top: 16px; 
+    right: 16px; 
+    z-index: 2; 
 }
 
 .el-header::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-color: rgba(0, 0, 0, 0.4); /* 遮罩层颜色和透明度 */
-	z-index: 1; 
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4); /* 遮罩层颜色和透明度 */
+    z-index: 1; 
 }
 
 .el-carousel, .el-carousel__container {
-	height: 100%;
-	width: 100%;
+    height: 100%;
+    width: 100%;
 }
 
 .el-tabs__item {
@@ -254,7 +299,7 @@ const removeCardById = (id: number) => {
 }
 
 .el-main {
-	width: 800px;
+	width: 850px;
 	margin: auto;
 	display: flex;
 	flex-direction: column;
@@ -302,9 +347,9 @@ const removeCardById = (id: number) => {
 .card {
 	background-color: var(--white);
 	border: 1px solid var(--gray-300);
-	flex-basis: calc(33.333% - 30px);
-	box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-	border-radius: 12px;
+	flex-basis: calc(33.333% - 35px);
+	box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+	border-radius: 10px;
 	margin-bottom: 15px;
 	display: flex;
 	flex-direction: column;
@@ -321,8 +366,8 @@ const removeCardById = (id: number) => {
 }
 
 .card-avatar {
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 50px;
+    min-height: 50px;
     border-radius: 50%;
     object-fit: cover;
     margin-right: 10px;
@@ -341,12 +386,12 @@ const removeCardById = (id: number) => {
 .card-title {
     color: var(--text-primary);
     font-weight: bold;
-    font-size: 14px;
+    font-size: 15px;
     margin-bottom: 5px;
 }
 
 .card-description {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-secondary);
 }
 

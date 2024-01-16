@@ -61,18 +61,24 @@
 										   <a-spin />
 								   </div>
 					             </div>
-								  <el-input
-										v-model="inputQuestion"
-										@keydown="handleKeyDown"
-										@compositionstart="handleCompositionStart"
-										@compositionend="handleCompositionEnd"
-										class="chat-input"
-										type="textarea"
-										:autosize="{ minRows: 1, maxRows: 5 }"
-										placeholder=" 输入你的问题, 按Enter发送"
-										suffix-icon="Position"
-										:input-style="{borderRadius: '20px', borderColor: 'red', boxShadow: '0 4px 10px #ccc', lineHeight: 2.5}"
-								  ></el-input>
+                                 
+                                 <div class="chat-input-div">
+                                     <el-icon v-if="current_model_id === 2" class="icon-send-picture"><PictureFilled /></el-icon>
+                                     <el-input
+                                        v-model="inputQuestion"
+                                        @keydown="handleKeyDown"
+                                        @compositionstart="handleCompositionStart"
+                                        @compositionend="handleCompositionEnd"
+                                        class="chat-input"
+                                        type="textarea"
+                                        :autosize="{ minRows: 1, maxRows: 5 }"
+                                        placeholder=""
+                                        :input-style="inputStyle"
+                                     >
+                                     </el-input>
+                                     <el-icon class="icon-send-message" @click="handleSubmit"><Promotion /></el-icon>
+                                 </div>
+								 
 					    </div>
 				  </el-main>
 			</el-container>
@@ -82,7 +88,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, provide, watch } from 'vue'
 import { Conversation, Chat } from '@/types/Conversation';
-import MarkdownIt from 'markdown-it'
 import Cookies from 'js-cookie'
 import { v4 as uuidv4 } from 'uuid';
 import { getConversations, deleteConversation, CreateOrUpdateConversation } from '@/services/ApiConversations';
@@ -101,8 +106,7 @@ const asideWidth = ref('250px');
 const selectedConversation = ref<Conversation[]>([])
 const selectedChats = ref<Chat[]>([]);
 const default_conversation_title = "新的对话";
-const md = new MarkdownIt();
-const inComposition = ref(false)
+const inComposition = ref(false);
 const userId = ref('')
 const isLoading = ref(false)
 const floatButton =  {
@@ -110,8 +114,13 @@ const floatButton =  {
 	top: "8px",
 	left: "260px"
 }
+const inputStyle = {
+    borderRadius: '20px', 
+    boxShadow: '0 4px 10px gray', 
+    lineHeight: 2
+}
 const current_model_id = ref(1)
-const current_model_name = ref("ChatGPT-3.5")
+const current_model_name = ref("GPT-3.5")
 
 provide('current_model_id', current_model_id);
 provide('current_model_name', current_model_name);
@@ -200,8 +209,10 @@ function handleCompositionEnd() {
 
 function handleKeyDown(event:KeyboardEvent): void{
 	const isCtrlKey = event.ctrlKey || event.metaKey;
-	if (isCtrlKey && event.key === 'Enter') {
-		console.log("用户用enter换行")
+    const isShiftKey = event.shiftKey;
+	if ((isCtrlKey || isShiftKey) && event.key === 'Enter') {
+        event.preventDefault();
+	    console.log("用户用enter换行");
 	    inputQuestion.value += "\n";
 	}else if(inComposition.value && event.key === 'Enter'){
 		console.log("用户用enter选择输入信息")
@@ -218,28 +229,32 @@ async function handleSubmit(){
 		console.log("无效提交")
 		return
 	}
-	
-	console.log("此时对话为： ", JSON.stringify(selectedConversation.value))
-	if(selectedConversation.value.length === 0 || selectedConversation.value[0].user_id === 'system'){
-		selectedConversation.value = [await createNewConversaiton()]
-		selectedConversation.value[0].chats.push({HUMAN: inputQuestion.value, AI: ''})
-		selectedChats.value = selectedConversation.value[0].chats
-		conversations.value.push(selectedConversation.value[0]);
-		activeIndex.value = String(conversations.value.length-1)
-	}else {
-		selectedConversation.value[0].chats.push({HUMAN: inputQuestion.value, AI: ''})
-		updateConversationInConversations(selectedConversation.value[0])
-	}
-	
-	if(selectedConversation.value[0].conversation_title === default_conversation_title){
-		updateTitleInConversation()
-	}
-	
-	nextTick(() => {
-	    scrollToBottom()
-	});
+    if(isLoading.value){
+        return
+    }
+    
 	try {
 		isLoading.value = true;
+        
+        if(selectedConversation.value.length === 0 || selectedConversation.value[0].user_id === 'system'){
+            let title = inputQuestion.value.substring(0, 10)
+            selectedConversation.value = [await createNewConversaiton(title)]
+            selectedConversation.value[0].chats.push({HUMAN: inputQuestion.value, AI: ''})
+            selectedChats.value = selectedConversation.value[0].chats
+            conversations.value.push(selectedConversation.value[0]);
+            activeIndex.value = String(conversations.value.length-1)
+        }else {
+            selectedConversation.value[0].chats.push({HUMAN: inputQuestion.value, AI: ''})
+            updateConversationInConversations(selectedConversation.value[0])
+        }
+        if(selectedConversation.value[0].conversation_title === default_conversation_title){
+            updateTitleInConversation()
+        }
+        
+        nextTick(() => {
+            scrollToBottom()
+        });
+	
 	    const [answer] = await Promise.all([
 	        chat(selectedConversation.value[0].id, userId.value, current_model_id.value, inputQuestion.value),
 	        inputQuestion.value = ''
@@ -253,8 +268,10 @@ async function handleSubmit(){
 	}
 }
 
-async function createNewConversaiton(){
-	const title:string = default_conversation_title
+
+async function createNewConversaiton(title: string = default_conversation_title){
+
+    console.log(`创建对话时的title为${title}`)
 	let conversation: Conversation = {
 		user_id: userId.value,
 		model_id: current_model_id.value,
@@ -384,6 +401,9 @@ html {
   color: black;
   font-size: 20px;
 }
+
+
+
 .avatar-icon-text {
   color: white;
   font-size: 14px;
@@ -439,6 +459,9 @@ html {
 	display: flex;
 	justify-content: center;
 	height: calc(100vh - 120px);
+    margin-top: 10px;
+    margin-bottom: 0px;
+    padding: 0;
 }
 
 
@@ -459,12 +482,39 @@ html {
   scrollbar-width: none; /* 对于Firefox */
 }
 
+.chat-input-div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    position: fixed;
+    bottom: 40px; 
+    min-width: 600px;
+}
+
+.icon-send-picture {
+  color: var(--gray-600);
+  font-size: 25px;
+  cursor: pointer;
+}
+.icon-send-picture:hover {
+  color: royalblue;
+}
+
+.icon-send-message {
+  color: var(--gray-600);
+  font-size: 25px;
+  cursor: pointer;
+}
+.icon-send-message:hover {
+  color: royalblue;
+}
 
 .chat-input {
-  position: fixed;
-  bottom: 40px; 
-  max-width: 600px;
-  border-radius: 20px;
+    max-width: 600px;
+    border-radius: 20px;
+    overflow-y: hidden;
+    padding: 0px;
 }
 
 .answer-row {
@@ -472,7 +522,7 @@ html {
 	min-height: 70px;
 	align-items: flex-start;
 	justify-content: center;
-	margin-bottom: 20px;
+	margin-bottom: 15px;
 	padding: 5px;
 }
 
@@ -493,8 +543,8 @@ html {
 }
 
 .custom-spacing {
-  letter-spacing: 1.4px;
-  line-height: 1.6;
+  letter-spacing: 1.2px;
+  line-height: 1.5;
   text-align: justify;
 }
 

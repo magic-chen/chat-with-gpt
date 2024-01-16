@@ -9,6 +9,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import FloatButton from './components/FloatButton.vue'
 import RobotList from './components/RobotList.vue'
 import ChatTest from './components/ChatTest.vue'
+import Login from './components/Login.vue'; 
 import router from './router';
 import store from './store';
 
@@ -25,4 +26,5 @@ app.directive('scroll-bottom', {});
 app.component('FloatButton', FloatButton);
 app.component('RobotList', RobotList);
 app.component('ChatTest', ChatTest);
+app.component('Login', Login);
 app.mount('#app');

@@ -8,7 +8,8 @@ export const apiConfig = {
   chat_test: `${API_HOST}/chat_test`,
   models: `${API_HOST}/models`,
   model_by_id: `${API_HOST}/model_by_id`,
-  user_models: `${API_HOST}/user_model`,
+  user_model: `${API_HOST}/user_model`,
+  delete_user_model: `${API_HOST}/delete_user_model`,
   select_model: `${API_HOST}/select_model`,
   create_model: `${API_HOST}/create_model`,
   update_model: `${API_HOST}/update_model`,
@@ -18,4 +19,4 @@ export const apiConfig = {
 };
 
 export const maxCardReturn = 10;
-export const typesConfig = ["教育", "程序", "写作", "图片"]
+export const typesConfig = ["文案", "求职", "程序", "产品",  "运营", "外语", "绘画", "其它"]
