@@ -10,6 +10,7 @@ import FloatButton from './components/FloatButton.vue'
 import RobotList from './components/RobotList.vue'
 import ChatTest from './components/ChatTest.vue'
 import Login from './components/Login.vue'; 
+import Register from './components/Register.vue'; 
 import router from './router';
 import store from './store';
 
@@ -27,4 +28,5 @@ app.component('FloatButton', FloatButton);
 app.component('RobotList', RobotList);
 app.component('ChatTest', ChatTest);
 app.component('Login', Login);
+app.component('Register', Register);
 app.mount('#app');

@@ -59,7 +59,6 @@ watchEffect(() => {
     }else{
          console.log('modelId has not changed:', props.modelId);
     }
-  // 在这里，您可以根据 modelId 的变化执行任何需要的逻辑
 });
 
 onMounted(async () => {

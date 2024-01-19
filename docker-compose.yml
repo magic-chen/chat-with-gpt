@@ -7,9 +7,12 @@ services:
       - "8080:80"
     volumes:
       - avatars_volume:/usr/share/nginx/html/avatars
+      - certbot_certs:/etc/letsencrypt
     environment:
       - GIT_COMMIT_HASH=${GIT_COMMIT_HASH}
 
 volumes:
   avatars_volume:
+    external: true
+  certbot_certs_volume:
     external: true

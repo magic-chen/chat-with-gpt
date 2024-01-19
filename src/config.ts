@@ -16,6 +16,8 @@ export const apiConfig = {
   delete_model: `${API_HOST}/delete_model`,
   user: `${API_HOST}/user`,
   upload_avatar: `${UPLOAD_HOST}/upload_avatar`,
+  register: `${API_HOST}/register`,
+  login: `${API_HOST}/login`,
 };
 
 export const maxCardReturn = 10;
