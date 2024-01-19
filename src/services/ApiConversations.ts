@@ -6,8 +6,10 @@ export async function getConversations(user_id: string, model_id: number): Promi
     const response = await axios.get(`${apiConfig.conversations}?user_id=${user_id}&model_id=${model_id}`);
     return response.data.data.conversations;
   } catch (error) {
+
     console.error('Error fetching data:', error);
     throw error;
+    
   }
 }
 
