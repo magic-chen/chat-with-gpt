@@ -85,7 +85,7 @@ function setCookie(name:string, value:string, hour:number) {
     date.setTime(date.getTime() + (hour * 60 * 60 * 1000));
     expires = "; expires=" + date.toUTCString();
   }
-  document.cookie = name + "=" + (value || "")  + expires + "; path=/; secure";
+  document.cookie = name + "=" + (value || "")  + expires + "; path=/;";
 }
 
 export async function getAccessToken() : Promise<string|undefined> {
