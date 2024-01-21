@@ -88,8 +88,6 @@ import { ElMessage } from 'element-plus';
 const router = useRouter();
 const store = useStore();
 const modelId = ref(router.currentRoute.value.params.id);
-const userId = ref<string>('');
-
 const modelData = reactive<Model>({
   created_at: '',
   updated_at: '',
@@ -123,20 +121,12 @@ const computed_publish_options = computed(() => {
 });
 
 onMounted(async () => {
-    const cookieUserId = Cookies.get('userId');
-	
-	if (cookieUserId !== undefined) {
-	  userId.value = cookieUserId;
-	} else {
-	  userId.value = uuidv4()
-	  Cookies.set('userId', userId.value, { expires: 365 })
-	}
     loadPromptData()
 });
 
 
 function goBack(){
-    router.push({ path: '/prompts'});
+    router.push({ path: '/GPTS'});
 }
 
 async function publish(){
@@ -154,7 +144,7 @@ async function publish(){
         await updateModel(Number(modelId.value), model)
     }else{
         console.log(`发布前model id 为${modelId.value}`)
-        modelId.value = await createModel(userId.value, model);
+        modelId.value = await createModel(model);
         if(modelId.value){
             ElMessage.success("发布成功")
         }else{
@@ -165,7 +155,7 @@ async function publish(){
 
 async function loadPromptData(){
   if (modelId.value) {
-    const data = await store.dispatch('model/getModel');
+    const data = await store.dispatch('public_data/getModel');
     
     modelData.created_at = data.created_at;
     modelData.updated_at = data.updated_at;

@@ -12,7 +12,7 @@
 							<el-avatar :size="30" shape="circle" style="background-color: white">
 								<el-icon class="icon-black"><Grid /></el-icon>
 							</el-avatar>
-							<span class="avatar-icon-text">Prompt商店</span>
+							<span class="avatar-icon-text">GPT商店</span>
 						</div>
 					
 					</div>
@@ -42,6 +42,7 @@
 	            </el-aside>
 
 			  <el-container class="chat-panel">
+				<LoginLogout bgColor="white"></LoginLogout>
 				  <el-main class="chat-content">
 					  <FloatButton :customClass="floatButton" />
 					   <div class="chat-panel-middle" v-scroll-bottom>
@@ -86,18 +87,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick, provide, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, provide, watch, computed, inject } from 'vue'
 import { Conversation, Chat } from '@/types/Conversation';
 import Cookies from 'js-cookie'
-import { v4 as uuidv4 } from 'uuid';
 import { getConversations, deleteConversation, CreateOrUpdateConversation } from '@/services/ApiConversations';
 import { chat } from '@/services/ApiChat';
-import { getUserInfo } from '@/services/ApiUser';
 import { getModelById } from '@/services/ApiModel';
 import { useRouter } from 'vue-router';
 import { scrollToBottom, renderMarkdown} from '@/utils/utils';
+import { useStore } from 'vuex';
 
-
+const store = useStore();
 const router = useRouter();
 const activeIndex = ref('0')
 const inputQuestion = ref('')
@@ -107,7 +107,6 @@ const selectedConversation = ref<Conversation[]>([])
 const selectedChats = ref<Chat[]>([]);
 const default_conversation_title = "新的对话";
 const inComposition = ref(false);
-const userId = ref('')
 const isLoading = ref(false)
 const floatButton =  {
 	position: "absolute",
@@ -119,12 +118,17 @@ const inputStyle = {
     boxShadow: '0 4px 10px gray', 
     lineHeight: 2
 }
-const current_model_id = ref(1)
-const current_model_name = ref("GPT-3.5")
-
+const current_model_id = computed({
+        get: () => store.state.public_data.currentUserModelId,
+        set: value => {
+            if (value) {
+            store.dispatch('public_data/setCurrentUserModelId', value);
+            }
+        }
+    });
+const current_model_name = ref('')
 provide('current_model_id', current_model_id);
 provide('current_model_name', current_model_name);
-provide('userId', userId)
 
 const stopWatch = watch(current_model_id, (newVal, oldVal) => {
       console.log('Current model ID changed:', newVal);
@@ -132,7 +136,7 @@ const stopWatch = watch(current_model_id, (newVal, oldVal) => {
         try {
 			selectedChats.value = []
 			
-			const data = await getConversations(userId.value, current_model_id.value);
+			const data = await getConversations( current_model_id.value);
 			conversations.value = data;
 			openChatConversation(undefined)
 		  
@@ -144,36 +148,21 @@ const stopWatch = watch(current_model_id, (newVal, oldVal) => {
 
 onMounted(async () => {
 	try {
-		const cookieUserId = Cookies.get('userId');
-		
-		if (cookieUserId !== undefined) {
-		  userId.value = cookieUserId;
-		} else {
-		  userId.value = uuidv4()
-		  Cookies.set('userId', userId.value, { expires: 365 })
-		}
-		
-		
-		//1. 现获取用户信息 新用户会注册后返回
-		const user = await getUserInfo(userId.value)
-		current_model_id.value = user.current_model_id
-		console.log("用户当前模型id: ", current_model_id.value)
-		
-		
-		//解析跳转页面传递的参数
-		const modelId:string = router.currentRoute.value.query.model_id as string;
-		if(modelId){
-			current_model_id.value =parseInt(modelId, 10)
-		}
+		// //解析跳转页面传递的参数
+		// const modelId:string = router.currentRoute.value.query.model_id as string;
+		// if(modelId){
+		// 	current_model_id.value =parseInt(modelId, 10)
+		// }
 		
 		//2. 获取模型信息
-		const model = await getModelById(userId.value, current_model_id.value);
-		current_model_name.value = model.name
-		console.log("用户当前模型name: ", current_model_name.value)
+		const model = await getModelById(current_model_id.value);
+		current_model_name.value = model.name;
+		
+		console.log("用户当前模型name: ", model.name)
 		
 		
 		//3. 获取对话信息
-	    const data = await getConversations(userId.value, current_model_id.value)
+	    const data = await getConversations(current_model_id.value)
 		conversations.value = data
 	} catch (error) {
 	    console.error('Error:', error);
@@ -196,7 +185,7 @@ async function handleNewChatClick(){
 }
 
 function handleGoToShop(){
-	router.push({ path: '/prompts'});
+	router.push({ path: '/GPTS'});
 }
 
 
@@ -256,7 +245,7 @@ async function handleSubmit(){
         });
 	
 	    const [answer] = await Promise.all([
-	        chat(selectedConversation.value[0].id, userId.value, current_model_id.value, inputQuestion.value),
+	        chat(selectedConversation.value[0].id, current_model_id.value, inputQuestion.value),
 	        inputQuestion.value = ''
 	    ]);
 	    updateAnswerInChats(answer);
@@ -273,12 +262,12 @@ async function createNewConversaiton(title: string = default_conversation_title)
 
     console.log(`创建对话时的title为${title}`)
 	let conversation: Conversation = {
-		user_id: userId.value,
+		user_id: Cookies.get("userId") || '',
 		model_id: current_model_id.value,
 		conversation_title: title,
 		chats: []
 	};
-	let responseData = await CreateOrUpdateConversation(userId.value, JSON.stringify(conversation))
+	let responseData = await CreateOrUpdateConversation(JSON.stringify(conversation))
 	if(responseData){
 		conversation.id = responseData.id
 	}
@@ -304,7 +293,7 @@ function deleteChatConversation(conversationIdToDelete: number|undefined){
 	  if (deletedIndex !== -1) {
 	    conversations.value.splice(deletedIndex, 1);
 		
-		deleteConversation(userId.value, conversationIdToDelete)
+		deleteConversation(conversationIdToDelete)
 		
 	    // 检查是否还有其他对话
 	    if (conversations.value.length > 0) {
@@ -342,7 +331,7 @@ function updateAnswerInChats(updatedAnswer:string){
 function updateTitleInConversation(){
 	if(selectedConversation.value[0].conversation_title === default_conversation_title){
 		selectedConversation.value[0].conversation_title = inputQuestion.value.substring(0, 10)
-		CreateOrUpdateConversation(userId.value, JSON.stringify(selectedConversation.value[0]))
+		CreateOrUpdateConversation(JSON.stringify(selectedConversation.value[0]))
 	}
 }
 </script>

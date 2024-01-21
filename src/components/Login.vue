@@ -2,7 +2,7 @@
     <div class="login-div">
         <a-modal v-model:open="dialogVisible" :footer="null" @close="closeDialog" width="400px" centered>
             <a-tabs default-active-key="1" @change="handleTabChange">
-                <a-tab-pane key="1" tab="手机号登录">
+                <!-- <a-tab-pane key="1" tab="手机号登录">
                     <a-form :model="user" class="login-form">
                         <a-form-item>
                             <a-input class="phone-input" v-model:value="user.phone" :maxlength="11"
@@ -18,15 +18,15 @@
 
                         </a-form-item>
                     </a-form>
-                </a-tab-pane>
+                </a-tab-pane> -->
                 <a-tab-pane key="2" tab="账号登录">
                     <a-form :model="user" class="login-form">
                         <a-form-item>
-                            <a-input class="phone-input" v-model:value="account.name" :maxlength="11"
+                            <a-input class="phone-input" v-model:value="account.name" autocomplete="username"
                                 placeholder="账号" />
                         </a-form-item>
                         <a-form-item>
-                            <a-input class="captcha-input" v-model:value="account.pw" type="password"
+                            <a-input class="captcha-input" v-model:value="account.pw" autocomplete="current-password" type="password"
                                 placeholder="密码">
                             </a-input>
 
@@ -40,11 +40,11 @@
                     <a href="/user" target="_blank">用户协议</a> 和
                     <a href="/privacy" target="_blank">隐私政策</a>
                 </a-checkbox>
-                <el-button type="primary" class="login-button" @click="login">立即登录</el-button>
+                <el-button type="primary" :disabled="!isDisabledLogin" class="login-button" @click="login">立即登录</el-button>
             </a-form-item>
             <a-divider />
             <div class="login-footer">
-                <span>其它登录方式</span>
+                <!-- <span>其它登录方式</span> -->
                 <span v-if="activeTab === '账号登录'" @click="handleRegisterClick" class="register-link">立即注册</span>
             </div>
         </a-modal>
@@ -57,8 +57,9 @@
     import { ElMessage } from 'element-plus';
     import CryptoJS from 'crypto-js';
     import { ref, watchEffect, watch, computed } from 'vue';
+    import { useStore } from 'vuex';
 
-
+    const store = useStore();
     const props = defineProps({
         open: Boolean
     });
@@ -77,7 +78,12 @@
         name: '',
         pw: '',
     });
-    const activeTab = ref('手机号登录');
+    const activeTab = ref('账号登录');
+    const isDisabledLogin = computed(() => {
+        return user.value.remember === true &&
+         (account.value.name || user.value.phone) &&
+         (user.value.captcha || account.value.pw);
+    });
 
     async function login() {
         if (await loginWithAccount(account.value.name, CryptoJS.SHA256(account.value.pw).toString()) === true){
@@ -92,6 +98,7 @@
 
     function closeDialog() {
         emit('update:open', false);
+        store.dispatch('public_data/hideLoginDialog');
     }
 
     function getVerifyCode() {
@@ -170,7 +177,7 @@
     .login-footer {
         display: flex;
         flex-wrap: wrap;
-        justify-content: space-between;
+        justify-content: center;
     }
     
     .register-link {

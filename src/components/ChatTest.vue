@@ -38,8 +38,6 @@ import { renderMarkdown, scrollToBottom } from '@/utils/utils'
 import Cookies from 'js-cookie'
 import { v4 as uuidv4 } from 'uuid';
 
-
-const userId = ref('')
 const props = defineProps({
   modelId: {
     type: Number,
@@ -62,14 +60,6 @@ watchEffect(() => {
 });
 
 onMounted(async () => {
-	const cookieUserId = Cookies.get('userId');
-	
-	if (cookieUserId !== undefined) {
-	  userId.value = cookieUserId;
-	} else {
-	  userId.value = uuidv4()
-	  Cookies.set('userId', userId.value, { expires: 365 })
-	}
     console.log("test_conversation_id", testConversationId.value)
 });
 
@@ -109,7 +99,7 @@ async function handleSubmit(){
 		isLoading.value = true;
         selectedChats.value.push({HUMAN: inputQuestion.value, AI: ''})
 	    const [answer] = await Promise.all([
-	        chatTest(testConversationId.value, userId.value, Number(props.modelId), inputQuestion.value),
+	        chatTest(testConversationId.value, Number(props.modelId), inputQuestion.value),
 	        inputQuestion.value = '' 
 	    ]);
 	    updateAnswerInChats(answer);

@@ -23,11 +23,11 @@
 							<div class="card-item">
                                 <el-avatar
                                   class="card-avatar" 
-                                  :size="40" 
+                                  :size="30" 
                                   shape="circle" 
                                   :style="{ backgroundColor: getColorForTitle(item.name) }">
                                   <img 
-                                    :size="40"
+                                    :size="30"
                                     :src="item.icon ? item.icon : item.src" 
                                     :style="item.icon ? 'width: 50%; height: 50%;object-fit: cover;' : 'width: 110%; height: 110%;object-fit: cover;'" />
                                 </el-avatar>
@@ -43,15 +43,15 @@
 
 <script lang="ts" setup>
 import { Model } from '@/types/Model';
-import { onMounted, ref, inject, Ref } from 'vue';
+import { onMounted, ref, inject, Ref,computed } from 'vue';
 import { updateCurrentModel, getModels } from '@/services/ApiModel';
 import { maxCardReturn } from '@/config';
 import { getColorForTitle } from '@/utils/utils';
+import {useStore} from 'vuex'
 
-
+const store = useStore();
 const current_model_id = ref<number>(inject('current_model_id') as number)
 const current_model_name = ref<string>(inject('current_model_name') as string)
-const userId = ref<string>(inject('userId') as string)
 const model_list = ref<Model[]>([]);
 const activeIndex = ref('')
 const open = ref(false)
@@ -86,7 +86,7 @@ async function loadMoreModels() {
 	loading.value = true;
 	
 	try {
-		const newModels = await getModels(userId.value, limit, offset.value);
+		const newModels = await getModels(limit, offset.value);
 		if (newModels.length < limit) {
 		  hasMore.value = false;
 		}
@@ -107,7 +107,7 @@ function handleItemClicked(index:string, item:Model){
 	if(item.id != current_model_id.value){
 		current_model_id.value = item.id;
 		current_model_name.value = item.name;
-		updateCurrentModel(userId.value, item.id)
+		updateCurrentModel(item.id)
 	}
 	
 	closeDrawer();
@@ -129,7 +129,7 @@ defineExpose({
 
 .el-icon {
   margin-right: 0!important;
-  font-size: 18px !important;
+  font-size: 16px !important;
 }
 
 .el-menu-item-Modellist {
@@ -155,11 +155,12 @@ defineExpose({
 	flex: 1;
 	text-align: center;
     overflow-x: hidden;
+	padding: 5px;
 }
 
 .card-avatar {
 	text-align: center;
-	font-size: 18px;
+	font-size: 16px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -167,7 +168,7 @@ defineExpose({
 
 .card-item-title {
 	font-family: 'microsoft yahei';
-	font-size: 18px;
+	font-size: 16px;
 	color: whitesmoke;
 }
 </style>

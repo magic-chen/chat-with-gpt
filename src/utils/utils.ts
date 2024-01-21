@@ -1,5 +1,6 @@
 
 import CryptoJS from 'crypto-js';
+import Cookies from 'js-cookie';
 import MarkdownIt from 'markdown-it'
 
 const colors = [
@@ -28,4 +29,10 @@ function renderMarkdown(text:string) {
   return htmlContent;
 }
 
-export {getColorForTitle, scrollToBottom, renderMarkdown}
+function clearLoginData() {
+  Cookies.remove('accessToken');
+  Cookies.remove('refreshToken');
+  Cookies.remove('userId');
+}
+
+export {getColorForTitle, scrollToBottom, renderMarkdown, clearLoginData}

@@ -18,7 +18,9 @@ export const apiConfig = {
   upload_avatar: `${UPLOAD_HOST}/upload_avatar`,
   register: `${API_HOST}/register`,
   login: `${API_HOST}/login`,
+  access_token: `${API_HOST}/access_token`,
 };
 
 export const maxCardReturn = 10;
+export const maxHoursExpire = 8;
 export const typesConfig = ["文案", "求职", "程序", "产品",  "运营", "外语", "绘画", "其它"]

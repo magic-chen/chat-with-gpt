@@ -1,10 +1,24 @@
 <template>
     <el-container>
         <el-header class="el-header">
-            <div class="button-container">
-                <el-button type="success" @click="clickLogin">登录</el-button>
-
-            </div>
+            <!-- <div class="login-logout-container">
+                <div class="login-logout-div">
+                    <div v-if="isLogin" class="login-div" >
+                        <el-avatar :size="35" shape="circle" style="background-color: green; color: white;">
+                            AB
+                        </el-avatar>
+                        <a-button type="text" style="color: white; padding: 5px;" @click="showLoginInfo">已登录</a-button>
+                    </div>
+                    <div v-else>
+                        <el-button type="success" @click="clickLogin">登录</el-button>
+                    </div>
+                </div>
+                <div v-if="isShowLoginInfo" class="login-info-div">
+                    <a-button  type="text" class="login-info-button" :icon="h(SettingOutlined)">设置</a-button>
+                    <a-button  type="text" class="login-info-button" :icon="h(LogoutOutlined)" @click="logout">登出</a-button>
+                </div>
+            </div> -->
+            <LoginLogout bgColor="black"></LoginLogout>
             <el-carousel class="el-carousel" :interval=9000>
                 <el-carousel-item v-for="image in images" :key="image">
                     <img :src="image" style="width: 100%; height: 100%; object-fit: cover;">
@@ -75,16 +89,15 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref, onMounted, computed, reactive, watch } from 'vue';
+    import { ref, onMounted, computed, reactive, h } from 'vue';
     import Cookies from 'js-cookie'
     import { getModels, deleteModel, } from '@/services/ApiModel';
     import { deleteUserModel, getUserModels, setModelFavorite } from '@/services/ApiUserModel';
     import { maxCardReturn, typesConfig } from '@/config';
-    import { v4 as uuidv4 } from 'uuid';
     import { Model } from '@/types/Model';
-    import { StarFilled, StarOutlined, FormOutlined, DeleteOutlined } from '@ant-design/icons-vue';
+    import { StarFilled, StarOutlined, FormOutlined, DeleteOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
     import { useRouter } from 'vue-router';
-    import { getColorForTitle } from '@/utils/utils';
+    import { clearLoginData, getColorForTitle } from '@/utils/utils';
     import image1 from '/src/assets/prompt_bg2.png';
     import image2 from '/src/assets/prompt_bg2.png';
     import { useStore } from 'vuex';
@@ -92,12 +105,22 @@
     const images = ref([image1, image2]);
     const router = useRouter();
     const store = useStore();
-    const userId = ref<string>('');
     const activeTab = ref('全部');
     const input_text = ref('');
     const loading = ref(false);
     const hasMore = ref(true);
-    const isLoginDialogVisible = ref(false);
+    const isLogin = computed(() => store.state.public_data.isLogined);
+    const isLoginDialogVisible = computed({
+        get: () => store.state.public_data.isLoginDialogVisible,
+        set: value => {
+            if (value) {
+            store.dispatch('public_data/showLoginDialog');
+            } else {
+            store.dispatch('public_data/hideLoginDialog');
+            }
+        }
+    });
+    const isShowLoginInfo = ref(false);
     const offset = ref(0);
     const tabs = ref(['我的', '全部', '收藏', ...typesConfig]);
 
@@ -124,16 +147,8 @@
     });
     
     onMounted(async () => {
-        const cookieUserId = Cookies.get('userId');
-
-        if (cookieUserId !== undefined) {
-            userId.value = cookieUserId;
-        } else {
-            userId.value = uuidv4()
-            Cookies.set('userId', userId.value, { expires: 365 })
-        }
+        console.log("onMounted, isLogin is", isLogin.value);
         await loadMoreModels();
-        loadUserCardsByType('favorite')
     });
 
     function filterWithSearchInput(cardSource : Model[]) {
@@ -143,10 +158,7 @@
         return cardSource
     }
 
-    function clickLogin() {
-        isLoginDialogVisible.value = true;
-        console.log(`click login,  isLogin value : ${isLoginDialogVisible.value}`)
-    }
+    
 
     async function loadMoreModels() {
         const limit = maxCardReturn;
@@ -157,7 +169,7 @@
         loading.value = true;
 
         try {
-            const newCards = await getModels(userId.value, limit, offset.value);
+            const newCards = await getModels(limit, offset.value);
             if (newCards.length < limit) {
                 hasMore.value = false;
             }
@@ -175,7 +187,7 @@
         //考虑到用户自己创建的模型数量有限，这里不做分段拉取
         const limit = 100;
         try {
-            const models = await getUserModels(userId.value, limit, type);
+            const models = await getUserModels(limit, type);
             if (type === 'create') {
                 userCards.splice(0, userCards.length, ...models);
             } else if (type === 'favorite') {
@@ -196,7 +208,7 @@
     }
 
     function createNewModel() {
-        router.push({ path: '/prompts/create' })
+        router.push({ path: '/GPTS/create' })
     }
 
     function onSelect() {
@@ -204,9 +216,8 @@
     }
 
     function onEditClick(card : Model) {
-        console.log("store model", JSON.stringify(card))
-        store.dispatch('model/setModel', card);
-        router.push({ path: `/prompts/edit/${card.id}` });
+        store.dispatch('public_data/setModel', card);
+        router.push({ path: `/GPTS/edit/${card.id}` });
     }
 
     async function onDeleteClick(card : Model) {
@@ -216,22 +227,29 @@
 
     function onChatClick(card : Model) {
         console.log(`click card ${card.id}`)
-        router.push({ path: '/chat', query: { 'model_id': card.id } });
+        store.dispatch('public_data/setCurrentUserModelId', card.id)
+        router.push({ path: '/chat'});
     }
 
     async function onStarClick(card : Model) {
-        card.is_favorite = !card.is_favorite;
-        cards.forEach(ca => {
-            if (ca.id === card.id) {
-                ca.is_favorite = card.is_favorite
-            }
-        })
-        if (card.is_favorite) {
-            await setModelFavorite(userId.value, card.id, 'favorite')
+       
+        
+        let requestResult = false;
+        if (!card.is_favorite) {
+            requestResult = await setModelFavorite(card.id, 'favorite')
         } else {
             const newFavoriteCards = favoriteCards.filter(ca => ca.id !== card.id);
             favoriteCards.splice(0, favoriteCards.length, ...newFavoriteCards);
-            await deleteUserModel(userId.value, card.id)
+            requestResult = await deleteUserModel(card.id)
+        }
+
+        if(requestResult){
+            card.is_favorite = !card.is_favorite;
+            cards.forEach(ca => {
+            if (ca.id === card.id) {
+                ca.is_favorite = card.is_favorite
+            }
+            })
         }
     }
 
@@ -260,12 +278,7 @@
         position: relative;
     }
 
-    .button-container {
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        z-index: 2;
-    }
+    
 
     .el-header::after {
         content: '';

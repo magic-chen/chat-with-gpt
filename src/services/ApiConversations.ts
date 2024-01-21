@@ -1,9 +1,11 @@
-import axios from 'axios';
+import user_axios from '@/services/http';
 import { apiConfig } from '@/config';
+import Cookies from 'js-cookie';
 
-export async function getConversations(user_id: string, model_id: number): Promise<any[]> {
+export async function getConversations(model_id: number): Promise<any[]> {
+  let user_id = Cookies.get('userId');
   try {
-    const response = await axios.get(`${apiConfig.conversations}?user_id=${user_id}&model_id=${model_id}`);
+    const response = await user_axios.get(`${apiConfig.conversations}?user_id=${user_id}&model_id=${model_id}`);
     return response.data.data.conversations;
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -11,9 +13,10 @@ export async function getConversations(user_id: string, model_id: number): Promi
   }
 }
 
-export async function deleteConversation(userId: string, id: number|undefined) {
+export async function deleteConversation(id: number|undefined) {
+  let user_id = Cookies.get('userId');
   try {
-    const response = await axios.delete(`${apiConfig.conversations}?user_id=${userId}&id=${id}`, {
+    const response = await user_axios.delete(`${apiConfig.conversations}?user_id=${user_id}&id=${id}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -24,11 +27,13 @@ export async function deleteConversation(userId: string, id: number|undefined) {
   }
 }
 
-export async function CreateOrUpdateConversation(userId: string, data:string) {
+export async function CreateOrUpdateConversation( data:string) {
+  let user_id = Cookies.get('userId');
+
   try {
     const config = {
       method: 'post',
-      url: `${apiConfig.conversations}?user_id=${userId}`,
+      url: `${apiConfig.conversations}?user_id=${user_id}`,
       headers: {
         'Content-Type': 'application/json'
       },
@@ -36,7 +41,7 @@ export async function CreateOrUpdateConversation(userId: string, data:string) {
     };
 	console.log("CreateOrUpdateConversation request: ", data)
 
-    const response = await axios(config);
+    const response = await user_axios(config);
 	if(response.data.code === 200){
 		console.log("CreateOrUpdateConversation response: ", response.data)
 		return response.data.data

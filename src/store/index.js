@@ -1,11 +1,16 @@
 // store/index.js
 import { createStore } from 'vuex';
-import ModelModule from './ModelModule';
+import publicData from './publicData';
+import createPersistedState from "vuex-persistedstate";
+
 
 const store =  createStore({
   modules: {
-    model: ModelModule
-  }
+    public_data: publicData
+  },
+  plugins: [createPersistedState({
+    paths: ['public_data'] 
+  })],
 });
 
 export default store;

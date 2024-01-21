@@ -12,9 +12,12 @@
 
 
 <script setup lang="ts" >
-	import { ref, inject, nextTick } from 'vue';
-	const current_model_id = inject('current_model_id')
-	const current_model_name = inject('current_model_name')
+	import { ref, inject, nextTick, computed } from 'vue';
+    import { useStore } from 'vuex';
+
+	const store = useStore();
+	const current_model_id = inject('current_model_id');
+	const current_model_name = inject('current_model_name');
 	const props = defineProps(['customClass']);
 	const robotListRef = ref(null)
 	const isShowDrawer = ref(false)
