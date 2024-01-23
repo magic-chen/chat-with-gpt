@@ -98,8 +98,8 @@
     import { StarFilled, StarOutlined, FormOutlined, DeleteOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
     import { useRouter } from 'vue-router';
     import { clearLoginData, getColorForTitle } from '@/utils/utils';
-    import image1 from '/src/assets/prompt_bg2.png';
-    import image2 from '/src/assets/prompt_bg2.png';
+    import image1 from '@/assets/prompt_bg2.png';
+    import image2 from '@/assets/prompt_bg2.png';
     import { useStore } from 'vuex';
 
     const images = ref([image1, image2]);

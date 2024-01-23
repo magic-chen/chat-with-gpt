@@ -56,7 +56,9 @@
 					               
 								  <div v-if="chat.AI" class="answer-row">
 									 <img class="chat-avatar" src="/src/assets/aws_gpt.png">
-									 <div class="answer-text custom-spacing" v-html="renderMarkdown(chat.AI)"></div>
+									 <div class="answer-text custom-spacing">
+										<MarkdownTest v-model:text="chat.AI"></MarkdownTest>
+									 </div>
 								   </div>
 								   <div v-else-if="isLoading" class="loading-animation-box">
 										   <a-spin />
@@ -350,7 +352,7 @@ html {
     font-feature-settings: normal;
     font-family: Söhne, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     font-variation-settings: normal;
-    line-height: 1.5;
+    line-height: 28px;
     tab-size: 4;
 }
 
@@ -457,8 +459,8 @@ html {
 .chat-panel-middle {
 	min-height: 100px;
 	height: 100%;
-	max-width: 600px;
-	min-width: 600px;
+	max-width: 700px;
+	min-width: 700px;
 	flex-grow: 2;
 	position: relative;
 }
@@ -527,13 +529,19 @@ html {
 
 .answer-text {
 	white-space: normal;
+	line-height: 28px;
 	font-size: 16px;
+	color: #374151;
 	width: 100%;
+	
+}
+
+:deep(p) {
+	margin-top: 20px;
+	margin-bottom: 20px;
 }
 
 .custom-spacing {
-  letter-spacing: 1.2px;
-  line-height: 1.5;
   text-align: justify;
 }
 

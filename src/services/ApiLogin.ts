@@ -31,7 +31,7 @@ export async function loginWithAccount(account_name: string, password: string): 
 
       setCookie('userId', user_id, 7*24); // 设置7天后过期
       setCookie('accessToken', access_token, maxHoursExpire); // 设置8小时后过期，服务端是12个小时，保证能自动获取
-      setCookie('refreshToken', refresh_token, 7*24); // 设置7天后过期
+      setCookie('refreshToken', refresh_token, 7*24); // 设置7天后过期, 服务端存放是8天，保证能及时更新
 
       store.dispatch('public_data/setCurrentUserModelId', user.current_model_id);
       store.dispatch('public_data/setUserName', user.protected_name);
@@ -95,32 +95,42 @@ export async function getAccessToken() : Promise<string|undefined> {
   }
   
   let refreshToken = Cookies.get('refreshToken');
+  if (!refreshToken) {
+    handleNoTokenFound();
+    return undefined;
+  }
 
-  try{
-    if (refreshToken) {
-      try {
-        const newAccessToken = await getNewAccessToken(refreshToken);
-        console.log(`getAccessToken, new token is: ${newAccessToken}`);
+  try {
+    const newAccessToken = await getNewAccessToken(refreshToken);
+    console.log(`getAccessToken, new token is: ${newAccessToken}`);
 
-        if (newAccessToken) {
-          setCookie('accessToken', newAccessToken, maxHoursExpire);
-          return newAccessToken;
-        } 
-      } catch (error) {
-        console.error(error);
-      }
+    if (newAccessToken) {
+      setCookie('accessToken', newAccessToken, maxHoursExpire);
+      return newAccessToken;
+    } else {
+      handleNoTokenFound();
     }
-  }catch(error){
-    console.error(error);
-  }finally{
-    if(accessToken === undefined && refreshToken === undefined){
-      store.dispatch('public_data/logout');
-      return new Promise((resolve) => {
-        resolveTokenPromise = resolve;
-        store.dispatch('public_data/showLoginDialog');
-      });
-    }
+  } catch (error) {
+    handleError(error);
   }
 
   return undefined;
+}
+
+function handleNoTokenFound() {
+  store.dispatch('public_data/logout');
+  return new Promise((resolve) => {
+    resolveTokenPromise = resolve;
+    store.dispatch('public_data/showLoginDialog');
+  });
+}
+
+function handleError(error:any) {
+  console.error(error);
+  if (axios.isAxiosError(error) && error.response) {
+    const status = error.response.status;
+    if (status === 401) {
+      ElMessage.error('您的账号在别处已经登录');
+    }
+  }
 }

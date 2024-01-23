@@ -4,7 +4,7 @@ services:
     container_name: chat-with-gpt-frontend
     image: chat-with-gpt-frontend:${GIT_COMMIT_HASH}
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - avatars_volume:/usr/share/nginx/html/avatars
       - certbot_certs_volume:/etc/letsencrypt

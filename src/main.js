@@ -4,6 +4,7 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import './assets/styles/base.css'
 import './assets/styles/styles.css'
+import 'highlight.js/styles/default.css';
 import axios from 'axios'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import FloatButton from './components/FloatButton.vue'
@@ -12,12 +13,15 @@ import ChatTest from './components/ChatTest.vue'
 import Login from './components/Login.vue'; 
 import Register from './components/Register.vue'; 
 import LoginLogout from './components/LoginLogout.vue';
+import MarkdownTest from './components/MarkdownTest.vue';
 import router from './router';
 import store from './store';
 
 
 const app = createApp(App);
+
 app.config.globalProperties.axios = axios;
+
 if (import.meta.env.DEV) {
   app.config.devtools = true;
 }
@@ -34,5 +38,6 @@ app.component('ChatTest', ChatTest);
 app.component('Login', Login);
 app.component('Register', Register);
 app.component('LoginLogout', LoginLogout);
+app.component('MarkdownTest', MarkdownTest);
 
 app.mount('#app');

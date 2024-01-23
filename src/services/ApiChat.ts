@@ -19,7 +19,7 @@ export async function chat(id: number|undefined,  model_id: number, input_text: 
 
     const response = await user_axios(config)
 	if(response && response.data.code === 200){
-		 console.log("chat response: ", response.data)
+		 console.log("chat response: ", JSON.stringify(response.data))
 		 return response.data.data.content
 	}
   } catch (error) {

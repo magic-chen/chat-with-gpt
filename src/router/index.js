@@ -9,6 +9,7 @@ import User from '@/components/User.vue';
 import Privacy from '@/components/Privacy.vue';
 import GPTSCreate from '@/components/GPTSCreate.vue';
 import store from '@/store/index';
+import MarkdownTest from '@/components/MarkdownTest.vue';
 
 const routes = [{
         path: '/',
@@ -34,6 +35,11 @@ const routes = [{
         path: '/privacy',
         name: 'Privacy',
         component: Privacy,
+    },
+    {
+        path: '/md',
+        name: 'MarkdownTest',
+        component: MarkdownTest,
     },
     {
         path: '/GPTS/create',

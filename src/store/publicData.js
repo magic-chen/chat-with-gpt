@@ -1,3 +1,6 @@
+import { clearLoginData } from '@/utils/utils';
+
+
 export default {
   namespaced: true,
   state: () => ({
@@ -58,7 +61,9 @@ export default {
     },
     logout({commit}){
       commit('setIsLogined', false);
-      console.log("set isLogined to false")
+      clearLoginData();
+      window.location.href = '/';
+      console.log("Logout and clear login data")
     }
   }
 };

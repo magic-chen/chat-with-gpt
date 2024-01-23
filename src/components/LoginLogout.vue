@@ -2,7 +2,7 @@
     <div class="login-logout-container">
             <div v-if="isLogin" class="login-div"  @mouseover="isShowLoginInfo = true" @mouseleave="isShowLoginInfo = false">
                 <div class="login-header">
-                    <el-avatar :size="35" shape="circle" :style= "{backgroundColor: avatarBackgroundColor}">
+                    <el-avatar :size="30" shape="circle" :style= "{backgroundColor: avatarBackgroundColor}">
                     {{iconName}}
                     </el-avatar>
                     <div type="text"  :style="{color: loginHeaderColor}" class=“login-info-button”>{{userName}}</div>
@@ -25,7 +25,6 @@
     import { SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
     import { clearLoginData, getColorForTitle } from '@/utils/utils';
     import { useRouter } from 'vue-router';
-    import { routeLocationKey } from 'vue-router';
 
     const props = defineProps({
         bgColor: String
@@ -64,10 +63,8 @@
     }
 
     function logout(){
-        store.dispatch('public_data/logout');
+        store.dispatch('public_data/logout', router);
         showLoginInfo();
-        clearLoginData();
-        router.push({ path: '/' })
     }
 
 </script>
@@ -79,8 +76,8 @@
         align-items: flex-end;
         position: absolute;
         width: 120px;
-        top: 16px;
-        right: 30px;
+        top: 15px;
+        right: 15px;
         z-index: 2;
     }
 
@@ -104,14 +101,13 @@
         justify-content: center;
         align-items: center;
         gap: 5px;
-        padding: 10px;
+        padding: 2px;
         font-size: 14px;
     }
 
     .login-info-div {
         display: flex;
         flex-direction: column;
-        margin-top: 5px;
         width: 100%;
         background-color: var(--gray-100);
         border-radius: 5%;
