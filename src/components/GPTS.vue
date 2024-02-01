@@ -120,8 +120,8 @@
     import { StarFilled, StarOutlined, FormOutlined, DeleteOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
     import { useRouter } from 'vue-router';
     import { clearLoginData, getColorForTitle } from '@/utils/utils';
-    import image1 from '@/assets/prompt_bg2.png';
-    import image2 from '@/assets/prompt_bg2.png';
+    import image1 from '@/assets/prompt_bg2.webp';
+    import image2 from '@/assets/prompt_bg2.webp';
     import { useStore } from 'vuex';
 
     const images = ref([image1, image2]);
@@ -301,7 +301,7 @@
     .el-header {
         background-color: black;
         width: 100%;
-        height: 380px;
+        height: 300px;
         padding: 0px;
         position: relative;
     }
@@ -361,8 +361,11 @@
     }
 
 
-    .el-tabs {
+    ::v-deep(.el-tabs) {
         width: 100%;
+    }
+    ::v-deep(.el-tabs__item){
+        color: var(--gray-500);
     }
 
     .card-list {
