@@ -7,11 +7,15 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@alicloud/dysmsapi20170525": "^2.0.24",
+    "@alicloud/tea-typescript": "^1.8.0",
     "@element-plus/icons-vue": "^2.1.0",
     "@fortawesome/fontawesome-free": "^6.5.1",
     "@types/axios": "^0.14.0",
+    "agent-base": "^7.1.0",
     "ant-design-vue": "^4.0.7",
     "axios": "^1.6.1",
+    "browserify-zlib": "^0.2.0",
     "crypto-js": "^4.2.0",
     "element-plus": "^2.4.4",
     "highlight.js": "^11.9.0",
@@ -20,6 +24,7 @@
     "markdown-it-highlightjs": "^4.0.1",
     "marked": "^11.1.1",
     "openai": "^4.17.0",
+    "stream-browserify": "^3.0.0",
     "uuid": "^9.0.1",
     "vue": "^3.3.8",
     "vue-gravatar": "^1.4.1",

@@ -16,6 +16,7 @@
                   <el-upload
                     class="avatar-uploader"
 					:show-file-list="false"
+                    :headers="{ 'Authorization': 'Bearer ' + token }"
                     :action="apiConfig.upload_avatar"
                     :on-success="handleAvatarSuccess"
                     :before-upload="beforeAvatarUpload">
@@ -76,13 +77,12 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted, reactive} from 'vue';
 import { useRouter } from 'vue-router';
-import Cookies from 'js-cookie'
-import { v4 as uuidv4 } from 'uuid';
 import { useStore } from 'vuex';
 import { apiConfig, typesConfig } from '@/config';
 import {createModel, updateModel} from '@/services/ApiModel';
 import { ModelRequest ,Model} from '@/types/Model';
 import { ElMessage } from 'element-plus';
+import { getAccessToken } from '@/services/ApiLogin';
 
 
 const router = useRouter();
@@ -119,9 +119,11 @@ const publish_options: StringDict = {
 const computed_publish_options = computed(() => {
     return Object.keys(publish_options);
 });
+const token = ref('');
 
 onMounted(async () => {
-    loadPromptData()
+    token.value = await getAccessToken() as string;
+    await loadPromptData()
 });
 
 

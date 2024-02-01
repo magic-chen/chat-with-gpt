@@ -2,10 +2,27 @@
     <div class="register-div">
         <a-modal title="注册" v-model:open="dialogVisible" :footer="null" @close="closeDialog" width="400px" centered>
             <a-divider></a-divider>
-            <a-form class="login-form">
+            <div class="login-form">
                 <a-form-item>
-                    <a-input class="account-name" v-model:value="account.name" placeholder="邮箱/手机号" />
+                    <a-input class="account-name" v-model:value="account.name" :maxlength="11" placeholder="手机号" >
+                        <!-- <template #prefix>
+                            <span class="get-verify-code">+86 </span>
+                        </template> -->
+                    </a-input>
                 </a-form-item>
+                
+                <a-form-item>
+                    <a-input type="text" class="captcha-input" v-model:value="captcha" :maxlength="6"
+                    @keyup="validateCaptchaInput($event)" placeholder="验证码" autocomplete="off">
+                    <template #suffix>
+                        <!-- <button type="button" class="get-verify-code" @click="getVerifyCode($event)" v-if="countdown === 0">获取验证码</button> -->
+
+                        <span class="get-verify-code" @click.prevent="getVerifyCode($event)" v-if="countdown === 0">获取验证码</span>
+                        <span class="countdown" v-else>{{ countdown }}秒后重试</span>
+                    </template>
+                </a-input>
+                </a-form-item>
+               
                 <a-form-item>
                     <a-input class="account-name" v-model:value="account.pw" autocomplete="off" placeholder="密码"
                         type="password">
@@ -16,7 +33,7 @@
                         type="password">
                     </a-input>
                 </a-form-item>
-            </a-form>
+            </div>
             <span class="error-message">{{ errorMessage }}</span>
             <el-button type="primary" class="register-button" @click="regist">注册</el-button>
         </a-modal>
@@ -24,11 +41,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect, watch, computed } from 'vue';
+import { ref, watchEffect, watch, computed, onUnmounted } from 'vue';
 import { register } from '@/services/ApiRegister';
 import CryptoJS from 'crypto-js';
 import { ElMessage } from 'element-plus';
 import { Account } from '@/types/Account';
+import { generateRandomNumber } from '@/utils/utils';
+import { sendSms } from '@/services/ApiSendSms';
 
 const props = defineProps({
     open: Boolean
@@ -44,16 +63,26 @@ const account = ref<Account>({
     pw: '',
     pw2: '',
 });
+const captcha = ref('')
+const countdown = ref(0)
+const timer = ref<NodeJS.Timeout | null>(null);
+
 
 function closeDialog() {
     emit('update:open', false);
+    if (timer) {
+        console.log("Clearing timer:", timer);
+
+        clearInterval(timer as unknown as NodeJS.Timeout);
+        timer.value = null;
+    }
 }
 
 async function regist() {
     console.log("click register button")
 
-    if (!isEmailOrPhoneNumber(account.value.name)) {
-        errorMessage.value = '请输入有效的邮箱或手机号';
+    if (!isPhoneNumber(account.value.name)) {
+        errorMessage.value = '请输入有效的手机号';
         return;
     }
 
@@ -68,7 +97,7 @@ async function regist() {
     }
 
     console.log(`account value: `, JSON.stringify(account.value))
-    let result = await register(account.value.name, CryptoJS.SHA256(account.value.pw).toString());
+    let result = await register(account.value.name, CryptoJS.SHA256(account.value.pw).toString(), captcha.value);
     if(result){
         closeDialog();
     }
@@ -83,12 +112,54 @@ function validatePassword(password: string): boolean {
     return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers;
 }
 
-function isEmailOrPhoneNumber(value: string) {
-    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+function isPhoneNumber(value: string) {
     const phoneNumberPattern = /^\d{11}$/;
 
-    return emailPattern.test(value) || phoneNumberPattern.test(value);
+    return  phoneNumberPattern.test(value);
 }
+
+function validateCaptchaInput(event : any) : void {
+        let inputValue = event.target.value;
+
+        if (/^\d+$/.test(inputValue)) {
+            captcha.value = inputValue.slice(0, 6);
+        }
+    };
+
+async function getVerifyCode(event:any){
+    event.preventDefault();
+
+    if (countdown.value === 0) {
+        let phoneNumber = account.value.name;
+        countdown.value = 120;
+        try{
+            let result = await sendSms(phoneNumber);
+            if(!result){
+                errorMessage.value = "发送验证码出错, 请重新再试"
+            }
+            
+            timer.value = setInterval(() => {
+            if (countdown.value > 0) {
+                countdown.value--;
+                } else {
+                    clearInterval(timer as unknown as NodeJS.Timeout);
+                    timer.value = null;
+                }
+            }, 1000);
+        }catch(error){
+            console.error('Error sending SMS:', error);
+            errorMessage.value = "发送验证码出错, 请重新再试"
+        }
+    }
+    
+}
+
+onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer as unknown as NodeJS.Timeout);
+    timer.value = null;
+  }
+});
 
 </script>
 
@@ -97,6 +168,15 @@ function isEmailOrPhoneNumber(value: string) {
     display: flex;
     justify-content: center;
 }
+
+.captcha-input {
+        min-height: 48px;
+}
+
+.get-verify-code {
+        cursor: pointer;
+        color: var(--gray-600);
+    }
 
 .account-name {
     min-height: 48px;

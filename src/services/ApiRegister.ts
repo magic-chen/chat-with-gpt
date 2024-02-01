@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { apiConfig } from '@/config';
 import { ElMessage } from 'element-plus';
 
-export async function register(account_name: string, password: string): Promise<boolean> {
+export async function register(account_name: string, password: string, verify_code: string): Promise<boolean> {
   try {
     const request = {
       method: 'post',
@@ -13,6 +13,7 @@ export async function register(account_name: string, password: string): Promise<
       data: {
         'account_name': account_name,
         'password': password,
+        'verify_code': verify_code
       }
     };
     console.log("register request");

@@ -5,6 +5,9 @@
 <script setup lang="ts">
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
+import { ref, watchEffect } from 'vue';
+
+
 
 const props = defineProps({
   text: {
@@ -15,7 +18,7 @@ const props = defineProps({
 });
 
 const md = new MarkdownIt({
-  html: false,
+  html: true,
   xhtmlOut: false,
   breaks: true,
   langPrefix: 'language-',
@@ -35,9 +38,15 @@ const md = new MarkdownIt({
     return '';
   }
 });
-console.log("raw data: ", props.text)
-const html_text = md.render(props.text);
-console.log("html_text: ",html_text)
+
+const html_text = ref('');
+
+watchEffect(() => {
+  // console.log("raw data: ", props.text)
+  html_text.value = md.render(props.text);
+  // console.log("html_text: ",html_text.value)
+
+});
 </script>
 
 <style scoped>
@@ -52,7 +61,7 @@ console.log("html_text: ",html_text)
   font-family: Arial, sans-serif; 
   font-size: 14px; 
   border-radius: 10px;
-  
+  margin: -10px; 
   padding-left: 10px;
   padding-top: 10px;
   padding-bottom: 10px;
@@ -67,15 +76,20 @@ console.log("html_text: ",html_text)
   margin-left: 15px;
   margin-right: 15px;
   margin-bottom: 15px;
-  padding-bottom: 10px;
+  padding: 10px;
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: "Söhne Mono", Monaco, "Andale Mono", "Ubuntu Mono", monospace !important;
   font-size: 14px;
 }
 :deep code {
-  
+
   white-space: inherit; 
+}
+
+:deep code:after {
+  content: '';
+  height: 10px; /* 这里设置您想要的内部边距大小 */
 }
 
 </style>

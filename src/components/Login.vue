@@ -37,7 +37,7 @@
             <a-form-item>
                 <a-checkbox class="checkbox-text" v-model:checked="user.remember">
                     已阅读并同意
-                    <a href="/user" target="_blank">用户协议</a> 和
+                    <a href="/user-agreement" target="_blank">用户协议</a> 和
                     <a href="/privacy" target="_blank">隐私政策</a>
                 </a-checkbox>
                 <el-button type="primary" :disabled="!isDisabledLogin" class="login-button" @click="login">立即登录</el-button>
@@ -123,8 +123,6 @@
 
         if (/^\d+$/.test(inputValue)) {
             user.value.captcha = inputValue.slice(0, 6);
-        } else {
-            user.value.captcha = inputValue.replace(/[^\d]/g, '').slice(0, 6);
         }
     };
     

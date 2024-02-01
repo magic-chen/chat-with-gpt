@@ -1,6 +1,8 @@
 export interface Chat {
+  id?: number;
   AI: string;
   HUMAN: string;
+  isEditing?: boolean; 
 }
 
 export interface Conversation {

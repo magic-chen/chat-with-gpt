@@ -35,4 +35,32 @@ function clearLoginData() {
   Cookies.remove('userId');
 }
 
-export {getColorForTitle, scrollToBottom, renderMarkdown, clearLoginData}
+function generateRandomNumber(): number {
+  const min = 100000;
+  const max = 999999;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const mapTwoDigitsToLetter = (twoDigits: string): string => {
+  const number = parseInt(twoDigits, 10);
+
+  return String.fromCharCode(65 + number % 26);
+};
+
+function convertFourDigitsToTwoLetters(fourDigits: string): string {
+  if (fourDigits.length !== 4 || isNaN(parseInt(fourDigits, 10))) {
+    throw new Error("Input must be a four-digit number.");
+  }
+
+  // 分割四位数为两个两位数
+  const firstPart = fourDigits.substring(0, 2);
+  const secondPart = fourDigits.substring(2, 4);
+
+  // 映射每部分到一个字母
+  const firstLetter = mapTwoDigitsToLetter(firstPart);
+  const secondLetter = mapTwoDigitsToLetter(secondPart);
+
+  return firstLetter + secondLetter;
+};
+
+export {getColorForTitle, scrollToBottom, renderMarkdown, clearLoginData, generateRandomNumber, convertFourDigitsToTwoLetters}

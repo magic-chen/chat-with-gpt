@@ -19,6 +19,7 @@ export const apiConfig = {
   register: `${API_HOST}/register`,
   login: `${API_HOST}/login`,
   access_token: `${API_HOST}/access_token`,
+  send_sms: `${API_HOST}/sendSms`,
 };
 
 export const maxCardReturn = 10;

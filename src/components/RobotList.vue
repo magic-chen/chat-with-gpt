@@ -23,7 +23,7 @@
 							<div class="card-item">
                                 <el-avatar
                                   class="card-avatar" 
-                                  :size="30" 
+                                  :size="20" 
                                   shape="circle" 
                                   :style="{ backgroundColor: getColorForTitle(item.name) }">
                                   <img 
@@ -132,11 +132,17 @@ defineExpose({
   font-size: 16px !important;
 }
 
+.el-menu-Modellist{
+	margin-left: 10px;
+	margin-right: 10px;
+	margin-top: 7px;
+}
+
 .el-menu-item-Modellist {
 	display: flex;
-	align-items: center; 
-	margin: 10px 5px;
+	align-items: center;
 	border-radius: 15px;
+	padding: 10px;
 }
 .el-menu-item-Modellist:hover {
 	background-color: #87d068 !important;
@@ -150,9 +156,8 @@ defineExpose({
 	display: flex;
 	align-items: center; 
 	vertical-align: middle;
-	width: 100%;
+	
 	gap: 8px;
-	flex: 1;
 	text-align: center;
     overflow-x: hidden;
 	padding: 5px;
@@ -164,6 +169,8 @@ defineExpose({
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	min-width: 35px;
+	min-height: 35px;
 }
 
 .card-item-title {

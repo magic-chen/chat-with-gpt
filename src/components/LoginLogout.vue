@@ -1,5 +1,5 @@
 <template>
-    <div class="login-logout-container">
+    <div class="login-logout-container" :style="props.style">
             <div v-if="isLogin" class="login-div"  @mouseover="isShowLoginInfo = true" @mouseleave="isShowLoginInfo = false">
                 <div class="login-header">
                     <el-avatar :size="30" shape="circle" :style= "{backgroundColor: avatarBackgroundColor}">
@@ -23,11 +23,13 @@
     import { ref, onMounted, computed, reactive, h } from 'vue';
     import { useStore } from 'vuex';
     import { SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
-    import { clearLoginData, getColorForTitle } from '@/utils/utils';
+    import { clearLoginData, convertFourDigitsToTwoLetters, getColorForTitle } from '@/utils/utils';
     import { useRouter } from 'vue-router';
+    import CryptoJS from 'crypto-js';
 
     const props = defineProps({
-        bgColor: String
+        bgColor: String,
+        style: Object,
     });
     const router = useRouter();
     const isShowLoginInfo = ref(false);
@@ -46,11 +48,12 @@
 
     const store = useStore();
     const isLogin = computed(() => store.state.public_data.isLogined);
-    const userName = computed(() => store.state.public_data.userName.substring(0,8));
+    const userName = computed(() => store.state.public_data.userName);
 
     const iconName = computed(() => {
         let userName = store.state.public_data.userName;
-        return userName.substring(0, 2).toUpperCase();
+        let lastFourChars = userName.substring(userName.length - 4);
+        return convertFourDigitsToTwoLetters(lastFourChars);
     });  
     const avatarBackgroundColor = computed(() => getColorForTitle(userName.value));
 
@@ -73,12 +76,10 @@
     .login-logout-container {
         display: flex;
         flex-direction: column;
-        align-items: flex-end;
-        position: absolute;
+        justify-content: center;
+        align-items: center;
         width: 120px;
-        top: 15px;
-        right: 15px;
-        z-index: 2;
+        z-index: 3;
     }
 
     .login-div {
@@ -86,7 +87,7 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        border-radius: 10px;
+        border-radius: 2%;
         cursor: pointer;
         width: 100%;
     }
@@ -101,7 +102,7 @@
         justify-content: center;
         align-items: center;
         gap: 5px;
-        padding: 2px;
+        height: 50px;
         font-size: 14px;
     }
 
@@ -110,12 +111,12 @@
         flex-direction: column;
         width: 100%;
         background-color: var(--gray-100);
-        border-radius: 5%;
+        border-radius: 2%;
     }
 
     .login-info-button {
-         font-size: 14px;
-         padding: 0px;
-         min-height: 40px;
+        font-size: 14px;
+        padding: 0px;
+        min-height: 40px;
     }
 </style>

@@ -1,6 +1,9 @@
 <template>
     <el-container>
         <el-header class="el-header">
+            <div class="logo">
+                <img src="/src/assets/company_logo.png">
+            </div>
             <!-- <div class="login-logout-container">
                 <div class="login-logout-div">
                     <div v-if="isLogin" class="login-div" >
@@ -18,7 +21,7 @@
                     <a-button  type="text" class="login-info-button" :icon="h(LogoutOutlined)" @click="logout">登出</a-button>
                 </div>
             </div> -->
-            <LoginLogout bgColor="black"></LoginLogout>
+            <LoginLogout bgColor="black" :style="{ position: 'absolute', top: '5px', right: '15px',  minHeight: '50px' }"></LoginLogout>
             <el-carousel class="el-carousel" :interval=9000>
                 <el-carousel-item v-for="image in images" :key="image">
                     <img :src="image" style="width: 100%; height: 100%; object-fit: cover;">
@@ -26,11 +29,10 @@
             </el-carousel>
         </el-header>
 
-
         <el-main class="el-main">
             <Login v-model:open="isLoginDialogVisible" />
-            <el-autocomplete class="search-box" v-model="input_text" :fetch-suggestions="options"
-                :trigger-on-focus="false" clearable placeholder="Search" @select="onSelect">
+            <el-autocomplete class="search-box" v-model="input_text" :fetch-suggestions="options" auto
+                :trigger-on-focus="false" clearable placeholder="Search" @select="onSelect" autocomplete="off">
                 <template #prefix>
                     <el-icon>
                         <Search />
@@ -85,12 +87,32 @@
             </el-tabs>
 
         </el-main>
+        <el-footer class="main-page-footer">
+            <div class="contact">
+                <div class="wechat-icon">
+                    <img width="50" height="50" src="/src/assets/wechat.svg"/>
+                    <div class="hover-content">
+                        <img src="/src/assets/wechat_qrcode.jpg" alt="二维码">
+                    </div>
+                
+                </div>
+                
+                <img width="50" height="50" src="/src/assets/email.svg"/>
+            </div>
+            <div class="declare">
+                版权所有©2024段栈边码
+            </div>
+            <div class="agreements">
+                <a href="/user-agreement" target="_blank">用户协议</a>
+                <a href="/privacy" target="_blank">隐私政策</a>
+                <a href="https://beian.miit.gov.cn">沪ICP备2024046294-1号</a>
+            </div>
+        </el-footer>
     </el-container>
 </template>
 
 <script lang="ts" setup>
     import { ref, onMounted, computed, reactive, h } from 'vue';
-    import Cookies from 'js-cookie'
     import { getModels, deleteModel, } from '@/services/ApiModel';
     import { deleteUserModel, getUserModels, setModelFavorite } from '@/services/ApiUserModel';
     import { maxCardReturn, typesConfig } from '@/config';
@@ -227,13 +249,14 @@
 
     function onChatClick(card : Model) {
         console.log(`click card ${card.id}`)
+        if(!isLogin.value){
+            store.dispatch('public_data/showLoginDialog');
+        }
         store.dispatch('public_data/setCurrentUserModelId', card.id)
         router.push({ path: '/chat'});
     }
 
     async function onStarClick(card : Model) {
-       
-        
         let requestResult = false;
         if (!card.is_favorite) {
             requestResult = await setModelFavorite(card.id, 'favorite')
@@ -269,33 +292,36 @@
     };
 </script>
 
-<style>
+<style scoped>
     .el-header {
-        background-color: var(--primary);
+        background-color: black;
         width: 100%;
         height: 380px;
         padding: 0px;
         position: relative;
     }
 
-    
+    .logo {
+        position: absolute; 
+        top: 5px; 
+        left: 15px; 
+        max-width: 100px;
+        min-height: 50px;
+        z-index: 3; 
+    }
 
-    .el-header::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.4);
-        /* 遮罩层颜色和透明度 */
-        z-index: 1;
+    .logo img {
+        max-height: 100%;
     }
 
     .el-carousel,
     .el-carousel__container {
+        position: absolute; 
+        top: 0; 
+        left: 0; 
         height: 100%;
         width: 100%;
+        z-index: 2; 
     }
 
     .el-tabs__item {
@@ -304,6 +330,8 @@
 
     .el-main {
         width: 850px;
+        min-height: 800px;
+        padding-bottom: 0;
         margin: auto;
         display: flex;
         flex-direction: column;
@@ -412,4 +440,59 @@
         /* 添加分界线 */
         color: var(--gray-300);
     }
+
+    .main-page-footer{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: black;
+        height: 150px;
+        color: #8f8f8f;
+        font-size: 12px;
+        a {
+            color: #8f8f8f;
+        }
+    }
+    .contact {
+        display: flex;
+        flex-direction: row;
+        height:60px;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        gap: 10px;
+       
+    }
+    .wechat-icon {
+        position: relative; 
+        display: inline-block;
+        cursor: pointer;
+    }
+    .hover-content {
+        position: absolute;
+        left: -120px;
+        bottom: -30px;
+        display: none; 
+        visibility: hidden; 
+        background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+        z-index: 2;
+        height: 120px;
+        width: 120px;
+        justify-content: center;
+        align-items: center;
+    }
+    .wechat-icon:hover .hover-content {
+        display: flex; 
+        visibility: visible; 
+    }
+
+
+    .agreements{
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        position: bottom;
+        margin-top: 5px;
+    }
+    
 </style>

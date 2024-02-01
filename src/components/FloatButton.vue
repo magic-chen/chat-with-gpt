@@ -42,9 +42,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: flex-start;
-		margin-left: 15px;
-		min-height : 48px;
-		background-color: #fff;
+		height : 100%;
+		z-index: 2;
 	}
 </style>
 

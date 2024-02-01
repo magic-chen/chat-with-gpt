@@ -26,7 +26,7 @@ export async function loginWithAccount(account_name: string, password: string): 
 
     if (response.status === 200) {
       const { user, access_token, refresh_token } = response.data.data;
-      console.log("login return user info: ", JSON.stringify(user));
+      // console.log("login return user info: ", JSON.stringify(user));
       const user_id = user.user_id;
 
       setCookie('userId', user_id, 7*24); // 设置7天后过期
