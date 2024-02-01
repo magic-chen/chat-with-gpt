@@ -142,6 +142,11 @@
             }
         }
     });
+    const inputStyle = {
+	borderRadius: '20px',
+	boxShadow: '0 4px 10px gray',
+	lineHeight: 2
+}
     const isShowLoginInfo = ref(false);
     const offset = ref(0);
     const tabs = ref(['我的', '全部', '收藏', ...typesConfig]);
@@ -338,13 +343,15 @@
         align-items: center;
     }
 
-    .search-box {
+    ::v-deep(.el-autocomplete), .search-box{
         min-width: 600px;
         margin-top: 20px;
         margin-bottom: 30px;
     }
 
-    .el-input__wrapper {
+
+    ::v-deep(.el-input__wrapper) {
+        width: 100%;
         height: 40px;
         line-height: 3;
         border-radius: 25px;
