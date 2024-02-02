@@ -105,7 +105,7 @@
             <div class="agreements">
                 <a href="/user-agreement" target="_blank">用户协议</a>
                 <a href="/privacy" target="_blank">隐私政策</a>
-                <a href="https://beian.miit.gov.cn">沪ICP备2024046294-1号</a>
+                <a href="https://beian.miit.gov.cn">沪ICP备2024046294号-1</a>
             </div>
         </el-footer>
     </el-container>

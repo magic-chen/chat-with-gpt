@@ -19,6 +19,7 @@ export default defineConfig({
 	  },
   plugins: [
     vue(),
+	// visualizer({ open: true, filename: 'bundle-report.html' }),
 	ViteTsconfigPaths(),
 	Components({
 	  resolvers: [

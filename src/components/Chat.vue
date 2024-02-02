@@ -269,14 +269,13 @@ function handleKeyDown(event: KeyboardEvent): void {
 }
 
 async function handleSubmit(regenerate: boolean = false, currentChatId: number = 0) {
-	// console.log(`submit content: ${inputQuestion.value}, current chat id: ${currentChatId}`)
 	inputQuestion.value = inputQuestion.value.replace(/^\s*[\r\n]/gm, '').replace(/[\r\n]\s*$/gm, '');
 	if (inputQuestion.value.trim() === "") {
 		console.log("无效提交");
 		return;
 	}
 
-	clearLastInvalidChat();
+	//clearLastInvalidChat();
 
 	if (isLoading.value) {
 		ElMessage.warning("请稍后发送")
@@ -285,7 +284,6 @@ async function handleSubmit(regenerate: boolean = false, currentChatId: number =
 
 	try {
 		isLoading.value = true;
-		isRegenerate.value = regenerate;
 		console.log("loading begin");
 		if (selectedConversation.value.length === 0 || selectedConversation.value[0].user_id === 'system') {
 			let title = inputQuestion.value.substring(0, 10)
@@ -308,7 +306,7 @@ async function handleSubmit(regenerate: boolean = false, currentChatId: number =
 		});
 
 		const [answer] = await Promise.all([
-			chat(selectedConversation.value[0].id, current_model_id.value, inputQuestion.value, isRegenerate.value, currentChatId ),
+			chat(selectedConversation.value[0].id, current_model_id.value, inputQuestion.value, regenerate, currentChatId ),
 			inputQuestion.value = ''
 		]);
 		updateAnswerInChats(answer);
@@ -317,7 +315,7 @@ async function handleSubmit(regenerate: boolean = false, currentChatId: number =
 		console.error('Error during chat:', error);
 	} finally {
 		isLoading.value = false;
-		isRegenerate.value = false;
+		// isRegenerate.value = false;
 		console.log("loading end");
 	}
 }
