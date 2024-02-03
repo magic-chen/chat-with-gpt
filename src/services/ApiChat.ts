@@ -25,7 +25,6 @@ export async function chat(id: number|undefined, model_id: number, input_text: s
 
     const response = await user_axios(config);
     if(response && response.data.code === 200){
-      console.log("chat response: ", JSON.stringify(response.data));
       return response.data.data.content;
     }
   } catch (error) {
@@ -34,11 +33,9 @@ export async function chat(id: number|undefined, model_id: number, input_text: s
     } else {
       console.error(error);
       let error_message = '<span style="color: red;">抱歉，请求出错。请稍后重试</span>';
-      console.log('return error message', error_message);
       return error_message;
     }
   }
-  console.log("return empty");
   return '';
 }
 

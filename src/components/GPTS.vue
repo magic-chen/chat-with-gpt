@@ -42,7 +42,7 @@
 
             <el-tabs class="el-tabs" v-model="activeTab" @tab-click="onTabClick">
                 <el-tab-pane v-for="tab in tabs" :key="tab" :label="tab" :name="tab">
-                    <div class="card-list" v-infinite-scroll="loadMoreModels" :infinite-scroll-disabled="loading"
+                    <div class="card-list" v-infinite-scroll="loadMoreModels" :infinite-scroll-disabled="!shouldLoadMore"
                         style="overflow: auto">
                         <div v-if="tab==='我的'" class="card">
                             <div class="create-new-card">
@@ -112,7 +112,7 @@
 </template>
 
 <script lang="ts" setup>
-    import { ref, onMounted, computed, reactive, h } from 'vue';
+    import { ref, onMounted, computed, reactive, h, onUnmounted } from 'vue';
     import { getModels, deleteModel, } from '@/services/ApiModel';
     import { deleteUserModel, getUserModels, setModelFavorite } from '@/services/ApiUserModel';
     import { maxCardReturn, typesConfig } from '@/config';
@@ -147,7 +147,7 @@
 	boxShadow: '0 4px 10px gray',
 	lineHeight: 2
 }
-    const isShowLoginInfo = ref(false);
+    const shouldLoadMore = ref(true);
     const offset = ref(0);
     const tabs = ref(['我的', '全部', '收藏', ...typesConfig]);
 
@@ -174,9 +174,13 @@
     });
     
     onMounted(async () => {
-        console.log("onMounted, isLogin is", isLogin.value);
+        window.addEventListener('scroll', handleScroll);
         await loadMoreModels();
     });
+
+    onUnmounted(() =>{
+        window.removeEventListener('scroll', handleScroll);
+    })
 
     function filterWithSearchInput(cardSource : Model[]) {
         if (input_text.value) {
@@ -188,13 +192,13 @@
     
 
     async function loadMoreModels() {
-        const limit = maxCardReturn;
-        if (loading.value || !hasMore.value) {
+        
+        if (loading.value || !shouldLoadMore.value || !hasMore.value) {
             return;
         }
 
         loading.value = true;
-
+        const limit = maxCardReturn;
         try {
             const newCards = await getModels(limit, offset.value);
             if (newCards.length < limit) {
@@ -207,6 +211,8 @@
             hasMore.value = false;
         } finally {
             loading.value = false;
+            shouldLoadMore.value = false;
+
         }
     }
 
@@ -295,6 +301,15 @@
             userCards.splice(index, 1);
         }
     };
+
+    function handleScroll() {
+        const scrollHeight = document.documentElement.scrollHeight;
+        const windowHeight = window.innerHeight;
+        const scrollTop = window.scrollY;
+        if (scrollHeight - scrollTop <= windowHeight) {
+            shouldLoadMore.value = true;
+        }
+    }
 </script>
 
 <style scoped>
@@ -374,7 +389,7 @@
         justify-content: space-between;
         gap: 25px;
         padding: 10px;
-        max-height: 700px;
+        overflow-y: auto;
     }
 
     .create-new-card {

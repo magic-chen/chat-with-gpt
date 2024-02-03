@@ -29,7 +29,7 @@
                   <label for="name">名字</label>
                   <el-input 
                       v-model="modelData.name" 
-                      maxlength="10" 
+                      maxlength="12" 
                       show-word-limit 
                       placeholder="给它起一个名字">
                   </el-input>
@@ -66,7 +66,7 @@
             </el-col>
             
             <el-col :span="16" class="test-section">
-                <ChatTest :model-id="modelId"></ChatTest>
+                <ChatTest :model-id=Number(modelId)></ChatTest>
                         
             </el-col>
           </el-row>
@@ -123,7 +123,7 @@ const token = ref('');
 
 onMounted(async () => {
     token.value = await getAccessToken() as string;
-    await loadPromptData()
+    loadPromptData()
 });
 
 
@@ -143,7 +143,12 @@ async function publish(){
         introduce: modelData.introduce,
     }
     if(modelId.value){
-        await updateModel(Number(modelId.value), model)
+        let result = await updateModel(Number(modelId.value), model)
+        if(result){
+            ElMessage.success("发布成功")
+        }else{
+            ElMessage.error("发布失败")
+        }
     }else{
         console.log(`发布前model id 为${modelId.value}`)
         modelId.value = await createModel(model);

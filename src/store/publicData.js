@@ -19,7 +19,7 @@ export default {
       state.userName = value;
       console.log('set user name to ', value)
     },
-    setcurrentModel(state, Model) {
+    setCurrentModel(state, Model) {
       state.currentModel = Model;
     },
     setIsLoginDialogVisible(state, isVisible) { 

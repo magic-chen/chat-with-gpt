@@ -95,11 +95,12 @@ export async function updateModel(model_id: number, model_data: ModelRequest){
     const response = await user_axios(request);
   	if(response.data.code === 200){
   		console.log("update model response: ", response.data)
-  		return
+  		return true;
   	}
     console.log(JSON.stringify(response.data));
   } catch (error) {
     console.error(error);
+    return false;
   }
 }
 
