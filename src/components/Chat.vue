@@ -125,10 +125,10 @@
 							class="chat-input" type="textarea" :autosize="{ minRows: 1, maxRows: 5 }" placeholder=""
 							:input-style="inputStyle">
 						</el-input>
-						<el-icon v-if="!isLoading" class="icon-send-message" @click="handleSubmit">
+						<el-icon v-if="!isLoading" class="icon-send-message" @click="handleSubmit(false, 0)">
 							<Promotion />
 						</el-icon>
-						<el-icon v-if="isLoading" class="icon-send-message" @click="stopChatRequest">
+						<el-icon v-if="isLoading" class="icon-send-message" @click="stopChatRequest()">
 							<PauseCircleOutlined />
 						</el-icon>
 						
@@ -264,7 +264,7 @@ function handleKeyDown(event: KeyboardEvent): void {
 	} else if (!inComposition.value && event.key === 'Enter') {
 		// console.log("开始提交")
 		event.preventDefault();
-		handleSubmit()
+		handleSubmit(false, 0);
 	}
 }
 
