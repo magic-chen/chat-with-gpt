@@ -143,7 +143,6 @@ function handleTabChange(key: string) {
 
 function closeDialog() {
     emit('update:open', false);
-    store.dispatch('public_data/hideLoginDialog');
 }
 
 function getVerifyCode() {

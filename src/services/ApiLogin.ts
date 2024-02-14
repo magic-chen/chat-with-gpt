@@ -57,6 +57,7 @@ export async function loginWithWechat(code:string){
     if (response.status === 200) {
       const { user, access_token, refresh_token } = response.data.data;
       onLoginSuccess(user, access_token, refresh_token )
+      console.log("wechat login success")
     }
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -83,7 +84,12 @@ export function setUserIdAndTokens(user_id:string, access_token:string, refresh_
 export function onLoginSuccess(user:User, access_token:string, refresh_token:string ){
       const user_id = user.user_id;
 
-      setUserIdAndTokens(user_id, access_token, refresh_token)
+      setUserIdAndTokens(user_id, access_token, refresh_token);
+
+      store.dispatch('public_data/setCurrentUserModelId', user.current_model_id);
+      store.dispatch('public_data/setUserName', user.protected_name);
+      store.dispatch('public_data/login');
+      store.dispatch('public_data/hideLoginDialog');
 
       onLoginCompleted(access_token);
       ElMessage.success('登陆成功');
