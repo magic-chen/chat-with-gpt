@@ -3,6 +3,7 @@ import { apiConfig, maxHoursExpire } from '@/config';
 import { ElMessage } from 'element-plus';
 import Cookies from 'js-cookie';
 import store from '@/store/index';
+import { User } from '@/types/User';
 
 let resolveTokenPromise: any = null;
 
@@ -26,19 +27,7 @@ export async function loginWithAccount(account_name: string, password: string): 
 
     if (response.status === 200) {
       const { user, access_token, refresh_token } = response.data.data;
-      // console.log("login return user info: ", JSON.stringify(user));
-      const user_id = user.user_id;
-
-      setCookie('userId', user_id, 7*24); // 设置7天后过期
-      setCookie('accessToken', access_token, maxHoursExpire); // 设置8小时后过期，服务端是12个小时，保证能自动获取
-      setCookie('refreshToken', refresh_token, 7*24); // 设置7天后过期, 服务端存放是8天，保证能及时更新
-
-      store.dispatch('public_data/setCurrentUserModelId', user.current_model_id);
-      store.dispatch('public_data/setUserName', user.protected_name);
-      store.dispatch('public_data/login');
-
-      onLoginCompleted(access_token);
-      ElMessage.success('登陆成功');
+      onLoginSuccess(user, access_token, refresh_token )
     }
 
     console.log(`login response: ${response.data} `)
@@ -71,6 +60,21 @@ async function getNewAccessToken(refreshToken: string){
   }
 }
 
+export function setUserIdAndTokens(user_id:string, access_token:string, refresh_token:string){
+  setCookie('userId', user_id, 7*24); // 设置7天后过期
+  setCookie('accessToken', access_token, maxHoursExpire); // 设置8小时后过期，服务端是12个小时，保证能自动获取
+  setCookie('refreshToken', refresh_token, 7*24); // 设置7天后过期, 服务端存放是8天，保证能及时更新
+}
+
+export function onLoginSuccess(user:User, access_token:string, refresh_token:string ){
+      const user_id = user.user_id;
+
+      setUserIdAndTokens(user_id, access_token, refresh_token)
+
+      onLoginCompleted(access_token);
+      ElMessage.success('登陆成功');
+}
+
 export function onLoginCompleted(newAccessToken:string) {
   if (resolveTokenPromise) {
     resolveTokenPromise(newAccessToken);
@@ -78,7 +82,7 @@ export function onLoginCompleted(newAccessToken:string) {
 }
 
 
-function setCookie(name:string, value:string, hour:number) {
+export function setCookie(name:string, value:string, hour:number) {
   var expires = "";
   if (hour) {
     var date = new Date();

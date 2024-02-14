@@ -4,7 +4,7 @@ import publicData from './publicData';
 import createPersistedState from "vuex-persistedstate";
 
 
-const store =  createStore({
+const store = createStore({
   modules: {
     public_data: publicData
   },

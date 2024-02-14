@@ -10,6 +10,7 @@ import Privacy from '@/components/Privacy.vue';
 import GPTSCreate from '@/components/GPTSCreate.vue';
 import store from '@/store/index';
 import MarkdownTest from '@/components/MarkdownTest.vue';
+import WechatLogin from '@/components/WechatLogin.vue';
 
 const routes = [{
         path: '/',
@@ -50,6 +51,11 @@ const routes = [{
         path: '/GPTS/edit/:id',
         name: 'GPTSEdit',
         component: GPTSCreate,
+    },
+    {
+        path: '/wechat-login',
+        name: 'WechatLogin',
+        component: WechatLogin,
     },
 ];
 

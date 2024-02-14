@@ -6,4 +6,6 @@ export interface User {
     current_user_service_level:number
     third_party_provider: string
     third_party_id: string
+
+    protected_name?: string
 }

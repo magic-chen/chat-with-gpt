@@ -1,6 +1,6 @@
 // src/config.ts
 const API_HOST = import.meta.env.VITE_BACKEND_HOST;
-const UPLOAD_HOST = import.meta.env.VITE_UPLOAD_HOST
+const PROD_HOST = import.meta.env.VITE_UPLOAD_HOST
 
 export const apiConfig = {
   conversations: `${API_HOST}/conversations`,
@@ -15,11 +15,12 @@ export const apiConfig = {
   update_model: `${API_HOST}/update_model`,
   delete_model: `${API_HOST}/delete_model`,
   user: `${API_HOST}/user`,
-  upload_avatar: `${UPLOAD_HOST}/upload_avatar`,
+  upload_avatar: `${PROD_HOST}/upload_avatar`,
   register: `${API_HOST}/register`,
   login: `${API_HOST}/login`,
   access_token: `${API_HOST}/access_token`,
   send_sms: `${API_HOST}/sendSms`,
+  wxlogin_callback: `${PROD_HOST}/wechat_callback`
 };
 
 export const maxCardReturn = 10;
