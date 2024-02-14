@@ -94,7 +94,7 @@ const isDisabledLogin = computed(() => {
         (user.value.captcha || account.value.pw);
 });
 import { onMounted } from 'vue';
-import { apiConfig } from '@/config';
+import { API_HOST, apiConfig } from '@/config';
 declare var WxLogin: any;
 
 onMounted(() => {
@@ -108,15 +108,15 @@ onMounted(() => {
 
 
 function initWxLogin() {
-    let redirect_uri = encodeURIComponent(apiConfig.wxlogin_callback);
-    console.log(`uri: ${redirect_uri}`);
+    let redirect_url = encodeURIComponent(apiConfig.wxlogin_redirect_url);
+    console.log(`uri: ${redirect_url}`);
     if (typeof WxLogin !== 'undefined') {
         var obj = new WxLogin({
             self_redirect: true,
             id: "login_container",
             appid: "wx217347979f3efc37",
             scope: "snsapi_login",
-            redirect_uri: encodeURIComponent("http://www.awsgpts.com:8090/wechat_login_callback"),
+            redirect_uri: redirect_url,
             state: "",
             style: "", // 非必须，提供"black"、"white"可选，默认为黑色文字描述。
             href: ""

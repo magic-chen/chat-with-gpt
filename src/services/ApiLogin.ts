@@ -50,6 +50,20 @@ export async function loginWithAccount(account_name: string, password: string): 
   }
 }
 
+export async function loginWithWechat(code:string){
+  try {
+    const response = await axios.get(`${apiConfig.wxlogin_callback}?code=${code}`);
+
+    if (response.status === 200) {
+      const { user, access_token, refresh_token } = response.data.data;
+      onLoginSuccess(user, access_token, refresh_token )
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error;
+  }
+}
+
 async function getNewAccessToken(refreshToken: string){
   try {
     const response = await axios.get(`${apiConfig.access_token}?refresh_token=${refreshToken}`);

@@ -1,6 +1,6 @@
 // src/config.ts
-const API_HOST = import.meta.env.VITE_BACKEND_HOST;
-const PROD_HOST = import.meta.env.VITE_UPLOAD_HOST
+export const API_HOST = import.meta.env.VITE_BACKEND_HOST;
+export const PROD_HOST = import.meta.env.VITE_UPLOAD_HOST
 
 export const apiConfig = {
   conversations: `${API_HOST}/conversations`,
@@ -20,7 +20,8 @@ export const apiConfig = {
   login: `${API_HOST}/login`,
   access_token: `${API_HOST}/access_token`,
   send_sms: `${API_HOST}/sendSms`,
-  wxlogin_callback: `${PROD_HOST}/wechat_callback`
+  wxlogin_callback: `${PROD_HOST}/wechat_login_callback`,
+  wxlogin_redirect_url: `http://www.awsgpts.com/wechat-login`
 };
 
 export const maxCardReturn = 10;
