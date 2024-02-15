@@ -48,7 +48,12 @@
 					<div v-for="(chat, index) in selectedChats" :key="index">
 						<div v-if="chat.HUMAN && chat.HUMAN.length > 0">
 							<div class="avatar-icon-text-div" >
-							<el-avatar :size="25" shape="circle" :style="{ backgroundColor: avatarBackgroundColor }">
+							<el-avatar v-if="userAvatar" class="card-avatar" :size="25" shape="circle"
+                                    :style="{ backgroundColor: avatarBackgroundColor }">
+								<img :size="25" :src="userAvatar"
+									:style="'width: 110%; height: 110%;object-fit: cover;'" />
+                    		</el-avatar>
+							<el-avatar v-else :size="25" shape="circle" :style="{ backgroundColor: avatarBackgroundColor }">
 								{{ iconName }}
 							</el-avatar>
 							<span class="name">YOU</span>
@@ -153,6 +158,7 @@ import { useStore } from 'vuex';
 import CryptoJS from 'crypto-js';
 import { ElMessage } from 'element-plus';
 import {PauseCircleOutlined} from '@ant-design/icons-vue';
+import { User } from '@/types/User';
 
 const store = useStore();
 const router = useRouter();
@@ -178,12 +184,29 @@ const current_model_id = computed({
 		}
 	}
 });
-const userName = ref(store.state.public_data.user.protected_name);
-const iconName = computed(() => {
-        let lastFourChars = userName.value.substring(userName.value.length - 4);
-        return convertFourDigitsToTwoLetters(lastFourChars);
+const user = computed(() => store.state.public_data.user as User);
 
+const userName = computed(() => {
+        if(user.value as User){
+            return user.value.protected_name as string;
+        }else{
+            return '';
+        }
+    });
+const userAvatar = computed(() => {
+	if(user.value as User){
+		return user.value.avatar as string;
+	}else{
+		return undefined;
+	}
 });
+const iconName = computed(() => {
+        if (!/^\d{3}\*{4}\d{4}$/.test(userName.value)) {
+            return userAvatar;
+        }
+        let lastFourChars = (userName.value).substring(userName.value.length - 4);
+        return convertFourDigitsToTwoLetters(lastFourChars);
+}); 
 const avatarBackgroundColor = computed(() => getColorForTitle(userName.value));
 const avatarLogoColor = "black";
 const copied = ref(false);

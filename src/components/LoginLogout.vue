@@ -3,9 +3,9 @@
             <div v-if="isLogin" class="login-div"  @mouseover="isShowLoginInfo = true" @mouseleave="isShowLoginInfo = false">
                 <div class="login-header">
                     
-                    <el-avatar v-if="isUserHasAvatar" class="card-avatar" :size="50" shape="circle"
+                    <el-avatar v-if="isUserHasAvatar" class="card-avatar" :size="30" shape="circle"
                                     :style="{ backgroundColor: avatarBackgroundColor }">
-                            <img :size="40" :src="userAvatar"
+                            <img :size="30" :src="userAvatar"
                                 :style="'width: 110%; height: 110%;object-fit: cover;'" />
                     </el-avatar>
                     <el-avatar v-else :size="30" shape="circle" :style= "{backgroundColor: avatarBackgroundColor}">

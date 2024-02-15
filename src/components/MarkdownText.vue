@@ -54,7 +54,7 @@ watchEffect(() => {
   width: 100%;
 }
 
-:deep   .code-header {
+:deep(.code-header) {
   height: 40px;
   background-color: #343541;
   color: var(--gray-100);
@@ -66,11 +66,10 @@ watchEffect(() => {
   padding-top: 10px;
   padding-bottom: 10px;
 }
-:deep  pre, :deep  code {
-  
+:deep(pre), :deep(code) {
   border-radius: 10px;
 }
-:deep  pre {
+:deep(pre) {
   background: #000; 
   color: #fff; 
   margin-left: 15px;
@@ -82,12 +81,12 @@ watchEffect(() => {
   font-family: "Söhne Mono", Monaco, "Andale Mono", "Ubuntu Mono", monospace !important;
   font-size: 14px;
 }
-:deep code {
+:deep(code){
 
   white-space: inherit; 
 }
 
-:deep code:after {
+:deep(code:after){
   content: '';
   height: 10px; /* 这里设置您想要的内部边距大小 */
 }

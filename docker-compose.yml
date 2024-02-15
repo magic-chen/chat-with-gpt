@@ -11,7 +11,6 @@ services:
       - letsencrypt_lib_volume:/var/lib/letsencrypt
       - webroot_volume:/var/www/html
       - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
     environment:
       - GIT_COMMIT_HASH=${GIT_COMMIT_HASH}
 
