@@ -17,10 +17,10 @@
                     <template #suffix>
                         <!-- <button type="button" class="get-verify-code" @click="getVerifyCode($event)" v-if="countdown === 0">获取验证码</button> -->
 
-                        <span class="get-verify-code" @click.prevent="getVerifyCode($event)" v-if="countdown === 0">获取验证码</span>
+                        <span class="get-verify-code" @click.prevent="getVerifyCodeWrapper($event, account.name)" v-if="countdown === 0">获取验证码</span>
                         <span class="countdown" v-else>{{ countdown }}秒后重试</span>
                     </template>
-                </a-input>
+                    </a-input>
                 </a-form-item>
                
                 <a-form-item>
@@ -46,8 +46,8 @@ import { register } from '@/services/ApiRegister';
 import CryptoJS from 'crypto-js';
 import { ElMessage } from 'element-plus';
 import { Account } from '@/types/Account';
-import { generateRandomNumber } from '@/utils/utils';
-import { sendSms } from '@/services/ApiSendSms';
+import { getVerifyCode } from '@/utils/utils'
+
 
 const props = defineProps({
     open: Boolean
@@ -63,8 +63,8 @@ const account = ref<Account>({
     pw: '',
     pw2: '',
 });
-const captcha = ref('')
-const countdown = ref(0)
+const captcha = ref('');
+const countdown = ref(0);
 const timer = ref<NodeJS.Timeout | null>(null);
 
 
@@ -126,32 +126,9 @@ function validateCaptchaInput(event : any) : void {
         }
     };
 
-async function getVerifyCode(event:any){
-    event.preventDefault();
+function getVerifyCodeWrapper(event:any, phoneNumber:string) {
+    getVerifyCode(event, phoneNumber, countdown)
 
-    if (countdown.value === 0) {
-        let phoneNumber = account.value.name;
-        countdown.value = 120;
-        try{
-            let result = await sendSms(phoneNumber);
-            if(!result){
-                errorMessage.value = "发送验证码出错, 请重新再试"
-            }
-            
-            timer.value = setInterval(() => {
-            if (countdown.value > 0) {
-                countdown.value--;
-                } else {
-                    clearInterval(timer as unknown as NodeJS.Timeout);
-                    timer.value = null;
-                }
-            }, 1000);
-        }catch(error){
-            console.error('Error sending SMS:', error);
-            errorMessage.value = "发送验证码出错, 请重新再试"
-        }
-    }
-    
 }
 
 onUnmounted(() => {

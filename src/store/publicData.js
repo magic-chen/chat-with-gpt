@@ -5,7 +5,7 @@ export default {
   namespaced: true,
   state: () => ({
     currentUserModelId: null,
-    userName: null,
+    user: null,
     currentModel: null,
     isLoginDialogVisible: false,
     isLogined: false,
@@ -15,9 +15,9 @@ export default {
       state.currentUserModelId = value;
       console.log('set current model id to ', value)
     },
-    setUserName(state, value) { 
-      state.userName = value;
-      console.log('set user name to ', value)
+    setUser(state, value) { 
+      state.user = value;
+      console.log('set user to ', value)
     },
     setCurrentModel(state, Model) {
       state.currentModel = Model;
@@ -36,11 +36,11 @@ export default {
     getCurrentUserModelId({ state }) {
       return state.currentUserModelId;
     },
-    setUserName({commit}, value){
-      commit('setUserName', value);
+    setUser({commit}, value){
+      commit('setUser', value);
     },
-    getUserName({ state }) {
-      return state.userName;
+    getUser({ state }) {
+      return state.user;
     },
 
     setModel({ commit }, Model) {

@@ -2,7 +2,13 @@
     <div class="login-logout-container" :style="props.style">
             <div v-if="isLogin" class="login-div"  @mouseover="isShowLoginInfo = true" @mouseleave="isShowLoginInfo = false">
                 <div class="login-header">
-                    <el-avatar :size="30" shape="circle" :style= "{backgroundColor: avatarBackgroundColor}">
+                    
+                    <el-avatar v-if="isUserHasAvatar" class="card-avatar" :size="50" shape="circle"
+                                    :style="{ backgroundColor: avatarBackgroundColor }">
+                            <img :size="40" :src="userAvatar"
+                                :style="'width: 110%; height: 110%;object-fit: cover;'" />
+                    </el-avatar>
+                    <el-avatar v-else :size="30" shape="circle" :style= "{backgroundColor: avatarBackgroundColor}">
                     {{iconName}}
                     </el-avatar>
                     <div type="text"  :style="{color: loginHeaderColor}" class=“login-info-button”>{{userName}}</div>
@@ -25,7 +31,7 @@
     import { SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
     import { clearLoginData, convertFourDigitsToTwoLetters, getColorForTitle } from '@/utils/utils';
     import { useRouter } from 'vue-router';
-    import CryptoJS from 'crypto-js';
+    import { User } from '@/types/User';
 
     const props = defineProps({
         bgColor: String,
@@ -47,12 +53,30 @@
     });
 
     const store = useStore();
+    const isUserHasAvatar = ref(false);
     const isLogin = computed(() => store.state.public_data.isLogined);
-    const userName = computed(() => store.state.public_data.userName);
+    const user = computed(() => store.state.public_data.user as User);
+    const userName = computed(() => {
+        if(user.value as User){
+            return user.value.protected_name as string;
+        }else{
+            return '';
+        }
+    });
+    const userAvatar = computed(() => {
+        if(user.value as User){
+            isUserHasAvatar.value = true;
+            return user.value.avatar as string;
+        }else{
+            return undefined;
+        }
+    });
 
     const iconName = computed(() => {
-        let userName = store.state.public_data.userName;
-        let lastFourChars = userName.substring(userName.length - 4);
+        if (!/^\d{3}\*{4}\d{4}$/.test(userName.value)) {
+            return userAvatar;
+        }
+        let lastFourChars = (userName.value).substring(userName.value.length - 4);
         return convertFourDigitsToTwoLetters(lastFourChars);
     });  
     const avatarBackgroundColor = computed(() => getColorForTitle(userName.value));

@@ -13,7 +13,7 @@ import ChatTest from './components/ChatTest.vue'
 import Login from './components/Login.vue'; 
 import Register from './components/Register.vue'; 
 import LoginLogout from './components/LoginLogout.vue';
-import MarkdownTest from './components/MarkdownTest.vue';
+import MarkdownText from './components/MarkdownText.vue';
 import router from './router';
 import store from './store';
 
@@ -38,6 +38,6 @@ app.component('ChatTest', ChatTest);
 app.component('Login', Login);
 app.component('Register', Register);
 app.component('LoginLogout', LoginLogout);
-app.component('MarkdownTest', MarkdownTest);
+app.component('MarkdownText', MarkdownText);
 
 app.mount('#app');

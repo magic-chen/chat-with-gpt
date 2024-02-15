@@ -8,7 +8,7 @@
                             <a-input class="phone-input" v-model:value="user.phone" :maxlength="11"
                                 @keyup="validatePhoneInput($event)" placeholder="手机号" />
                         </a-form-item>
-                        <a-form-item>
+                        <!-- <a-form-item>
                             <a-input class="captcha-input" v-model:value="user.captcha" :maxlength="6"
                                 @keyup="validateCaptchaInput($event)" placeholder="验证码">
                                 <template #suffix>
@@ -16,7 +16,16 @@
                                 </template>
                             </a-input>
 
-                        </a-form-item>
+                        </a-form-item> -->
+                        <a-form-item>
+                            <a-input type="text" class="captcha-input" v-model:value="user.captcha" :maxlength="6"
+                            @keyup="validateCaptchaInput($event)" placeholder="验证码" autocomplete="off">
+                            <template #suffix>
+                                <span class="get-verify-code" @click.prevent="getVerifyCodeWrapper($event, user.phone)" v-if="countdown === 0">获取验证码</span>
+                                <span class="countdown" v-else>{{ countdown }}秒后重试</span>
+                            </template>
+                            </a-input>
+                </a-form-item>
                     </a-form>
                 </a-tab-pane>
                 <a-tab-pane key="2" tab="账号登录">
@@ -55,12 +64,14 @@
 </template>
 
 <script lang="ts" setup>
-import { loginWithAccount } from '@/services/ApiLogin';
+import { loginWithAccount, loginWithPhone } from '@/services/ApiLogin';
 import { ElMessage } from 'element-plus';
 import CryptoJS from 'crypto-js';
-import { ref, watchEffect, watch, computed, nextTick } from 'vue';
+import { ref, watchEffect, watch, computed, nextTick, toRefs, reactive } from 'vue';
 import { useStore } from 'vuex';
-
+import { onMounted } from 'vue';
+import { apiConfig } from '@/config';
+import { getVerifyCode } from '@/utils/utils';
 
 const store = useStore();
 const props = defineProps({
@@ -93,8 +104,8 @@ const isDisabledLogin = computed(() => {
         (account.value.name || user.value.phone) &&
         (user.value.captcha || account.value.pw);
 });
-import { onMounted } from 'vue';
-import { API_HOST, apiConfig } from '@/config';
+
+const countdown = ref(0);
 declare var WxLogin: any;
 
 onMounted(() => {
@@ -126,7 +137,16 @@ function initWxLogin() {
 
 
 async function login() {
-    if (await loginWithAccount(account.value.name, CryptoJS.SHA256(account.value.pw).toString()) === true) {
+    let loginResult = false;
+    if(user.value.captcha){
+        loginResult = await loginWithPhone(user.value.phone, user.value.captcha)
+    }
+
+    if(account.value.pw){
+        loginResult = await loginWithAccount(account.value.name, CryptoJS.SHA256(account.value.pw).toString())
+
+    }
+    if(loginResult){
         closeDialog();
     }
 }
@@ -145,10 +165,9 @@ function closeDialog() {
     emit('update:open', false);
 }
 
-function getVerifyCode() {
-    if (!user.value.phone) {
-        ElMessage.error("手机号不能为空");
-    }
+function getVerifyCodeWrapper(event:any, phoneNumber:string) {
+    getVerifyCode(event, phoneNumber, countdown)
+
 }
 
 function validatePhoneInput(event: any) {

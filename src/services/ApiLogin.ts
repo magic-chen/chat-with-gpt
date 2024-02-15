@@ -50,6 +50,48 @@ export async function loginWithAccount(account_name: string, password: string): 
   }
 }
 
+export async function loginWithPhone(phone: string, captcha: string): Promise<boolean> {
+  try {
+    const request = {
+      method: 'post',
+      url: `${apiConfig.login}`,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data: {
+        'phone': phone,
+        'captcha': captcha,
+        'type': '手机号登录'
+      }
+    };
+
+    const response = await axios(request);
+
+    if (response.status === 200) {
+      const { user, access_token, refresh_token } = response.data.data;
+      onLoginSuccess(user, access_token, refresh_token )
+    }
+
+    console.log(`login response: ${response.data} `)
+    return true;
+  } catch (error) {
+    
+    const axiosError = error as AxiosError;
+    if (axiosError.response) {
+      const status = axiosError.response.status;
+      if (status === 401) {
+        ElMessage.error('请输入有效的验证码');
+      } else if (status === 404) {
+        ElMessage.error('请输入正确的用户名');
+      } 
+    } else {
+      console.error(error);
+      ElMessage.error('登陆失败，请稍后重试');
+    }
+    return false;
+  }
+}
+
 export async function loginWithWechat(code:string){
   try {
     const response = await axios.get(`${apiConfig.wxlogin_callback}?code=${code}`);
@@ -87,7 +129,7 @@ export function onLoginSuccess(user:User, access_token:string, refresh_token:str
       setUserIdAndTokens(user_id, access_token, refresh_token);
 
       store.dispatch('public_data/setCurrentUserModelId', user.current_model_id);
-      store.dispatch('public_data/setUserName', user.protected_name);
+      store.dispatch('public_data/setUser', user);
       store.dispatch('public_data/login');
       store.dispatch('public_data/hideLoginDialog');
 

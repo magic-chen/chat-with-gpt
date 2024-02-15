@@ -1,7 +1,10 @@
 
+import { sendSms } from '@/services/ApiSendSms';
 import CryptoJS from 'crypto-js';
+import { ElMessage } from 'element-plus';
 import Cookies from 'js-cookie';
 import MarkdownIt from 'markdown-it'
+import { ref } from 'vue';
 
 const colors = [
 	"#F2994A", // 活力橙色
@@ -9,6 +12,7 @@ const colors = [
 	"#EB5757", // 柔和红色
 ];
 const md = new MarkdownIt();
+const timer = ref<NodeJS.Timeout | null>(null);
 
 function getColorForTitle(title:string) {
   const hash = CryptoJS.SHA256(title).toString();
@@ -43,7 +47,6 @@ function generateRandomNumber(): number {
 
 const mapTwoDigitsToLetter = (twoDigits: string): string => {
   const number = parseInt(twoDigits, 10);
-
   return String.fromCharCode(65 + number % 26);
 };
 
@@ -62,5 +65,36 @@ function convertFourDigitsToTwoLetters(fourDigits: string): string {
 
   return firstLetter + secondLetter;
 };
+
+export async function getVerifyCode(event:any, phoneNumber:string, countdown:any){
+  event.preventDefault();
+  if (!phoneNumber) {
+    ElMessage.error("手机号不能为空");
+  }
+  console.log("get verify code, countdown value is :", countdown.value)
+  if (countdown.value === 0) {
+      countdown.value = 120;
+      try{
+          let result = await sendSms(phoneNumber);
+          if(!result){
+              return "发送验证码出错, 请重新再试"
+          }
+          
+          timer.value = setInterval(() => {
+          if (countdown.value > 0) {
+              countdown.value--;
+              } else {
+                  clearInterval(timer as unknown as NodeJS.Timeout);
+                  timer.value = null;
+              }
+          }, 1000);
+      }catch(error){
+          console.error('Error sending SMS:', error);
+          return "发送验证码出错, 请重新再试"
+      }
+      console.log("get verify code, countdown value is :", countdown.value)
+
+  }
+}
 
 export {getColorForTitle, scrollToBottom, renderMarkdown, clearLoginData, generateRandomNumber, convertFourDigitsToTwoLetters}

@@ -63,7 +63,7 @@
 									</div>
 								</div>
     							<div v-else>
-									<MarkdownTest v-model:text="chat.HUMAN"></MarkdownTest>
+									<MarkdownText v-model:text="chat.HUMAN"></MarkdownText>
 									<div class="question-text-action">
 											<el-tooltip class="box-item" effect="dark" content="重新编辑" placement="bottom"
 												:hide-after=0>
@@ -88,7 +88,7 @@
 						<div v-if="chat.AI">
 							<div class="answer-row">
 								<div class="answer-text custom-spacing">
-									<MarkdownTest v-model:text="chat.AI"></MarkdownTest>
+									<MarkdownText v-model:text="chat.AI"></MarkdownText>
 									<div class="answer-text-action">
 										<el-tooltip class="box-item" effect="dark" content="复制内容" placement="bottom"
 											:hide-after=0>
@@ -178,7 +178,7 @@ const current_model_id = computed({
 		}
 	}
 });
-const userName = ref(store.state.public_data.userName);
+const userName = ref(store.state.public_data.user.protected_name);
 const iconName = computed(() => {
         let lastFourChars = userName.value.substring(userName.value.length - 4);
         return convertFourDigitsToTwoLetters(lastFourChars);
