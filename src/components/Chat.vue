@@ -90,10 +90,16 @@
 								</el-avatar>
 								<span class="name">{{ current_model_name }}</span>
 						</div>
+						<!-- <span>索引：{{ index }} 长度：{{ selectedChats.length }}</span> -->
+
 						<div v-if="chat.AI">
 							<div class="answer-row">
 								<div class="answer-text custom-spacing">
-									<MarkdownText v-model:text="chat.AI"></MarkdownText>
+									<Typewriter
+										v-if="index === selectedChats.length - 1 && chat.AI === 'T'" 
+										v-model:answer="chat.AI"
+										@update:answer="handleAnswerUpdate($event, index)"></Typewriter>
+									<MarkdownText v-else v-model:text="chat.AI"></MarkdownText>
 									<div class="answer-text-action">
 										<el-tooltip class="box-item" effect="dark" content="复制内容" placement="bottom"
 											:hide-after=0>
@@ -113,11 +119,12 @@
 										</el-tooltip>
 									</div>
 								</div>
+								<div v-if="isLoading && chat.AI === 'T'" class="loading-animation-box">
+									<a-spin />
+								</div>
 							</div>
 						</div>
-						<div v-else-if="isLoading" class="loading-animation-box">
-							<a-spin />
-						</div>
+						
 					</div>
 
 					<div class="chat-input-div">
@@ -153,12 +160,12 @@ import { getConversations, deleteConversation, CreateOrUpdateConversation } from
 import { cancelChatRequest, chat } from '@/services/ApiChat';
 import { getModelById } from '@/services/ApiModel';
 import { useRouter } from 'vue-router';
-import { scrollToBottom, renderMarkdown, getColorForTitle, convertFourDigitsToTwoLetters } from '@/utils/utils';
+import { scrollToBottom, getColorForTitle, convertFourDigitsToTwoLetters } from '@/utils/utils';
 import { useStore } from 'vuex';
-import CryptoJS from 'crypto-js';
 import { ElMessage } from 'element-plus';
 import {PauseCircleOutlined} from '@ant-design/icons-vue';
 import { User } from '@/types/User';
+import { connectFetch } from '@/services/ApiFetchChat';
 
 const store = useStore();
 const router = useRouter();
@@ -170,7 +177,7 @@ const selectedConversation = ref<Conversation[]>([])
 const selectedChats = ref<Chat[]>([]);
 const default_conversation_title = "新的对话";
 const inComposition = ref(false);
-const isLoading = ref(false)
+const isLoading = computed(() => store.state.chat.is_loading_chat);
 const inputStyle = {
 	borderRadius: '20px',
 	boxShadow: '0 4px 10px gray',
@@ -210,7 +217,6 @@ const iconName = computed(() => {
 const avatarBackgroundColor = computed(() => getColorForTitle(userName.value));
 const avatarLogoColor = "black";
 const copied = ref(false);
-const isRegenerate = ref(false);
 
 const current_model_name = ref('')
 provide('current_model_id', current_model_id);
@@ -280,12 +286,9 @@ function handleKeyDown(event: KeyboardEvent): void {
 	const isShiftKey = event.shiftKey;
 	if ((isCtrlKey || isShiftKey) && event.key === 'Enter') {
 		event.preventDefault();
-		// console.log("用户用enter换行");
 		inputQuestion.value += "\n";
 	} else if (inComposition.value && event.key === 'Enter') {
-		// console.log("用户用enter选择输入信息")
 	} else if (!inComposition.value && event.key === 'Enter') {
-		// console.log("开始提交")
 		event.preventDefault();
 		handleSubmit(false, 0);
 	}
@@ -294,11 +297,8 @@ function handleKeyDown(event: KeyboardEvent): void {
 async function handleSubmit(regenerate: boolean = false, currentChatId: number = 0) {
 	inputQuestion.value = inputQuestion.value.replace(/^\s*[\r\n]/gm, '').replace(/[\r\n]\s*$/gm, '');
 	if (inputQuestion.value.trim() === "") {
-		console.log("无效提交");
 		return;
 	}
-
-	//clearLastInvalidChat();
 
 	if (isLoading.value) {
 		ElMessage.warning("请稍后发送")
@@ -306,17 +306,17 @@ async function handleSubmit(regenerate: boolean = false, currentChatId: number =
 	}
 
 	try {
-		isLoading.value = true;
+		store.dispatch("chat/setChatLoadingStatus", true)
 		console.log("loading begin");
 		if (selectedConversation.value.length === 0 || selectedConversation.value[0].user_id === 'system') {
 			let title = inputQuestion.value.substring(0, 10)
 			selectedConversation.value = [await createNewConversaiton(title)]
-			selectedConversation.value[0].chats.push({ HUMAN: inputQuestion.value, AI: '' })
+			selectedConversation.value[0].chats.push({ HUMAN: inputQuestion.value, AI: 'T' })
 			selectedChats.value = selectedConversation.value[0].chats
 			conversations.value.push(selectedConversation.value[0]);
 			activeIndex.value = String(conversations.value.length - 1)
 		} else {
-			selectedConversation.value[0].chats.push({ HUMAN: inputQuestion.value, AI: '' })
+			selectedConversation.value[0].chats.push({ HUMAN: inputQuestion.value, AI: 'T' })
 			selectedChats.value = selectedConversation.value[0].chats
 			updateConversationInConversations(selectedConversation.value[0])
 		}
@@ -328,18 +328,16 @@ async function handleSubmit(regenerate: boolean = false, currentChatId: number =
 			scrollToBottom()
 		});
 
-		const [answer] = await Promise.all([
-			chat(selectedConversation.value[0].id, current_model_id.value, inputQuestion.value, regenerate, currentChatId ),
+		await Promise.all([
+			connectFetch(current_model_id.value, inputQuestion.value, regenerate, selectedConversation.value[0].id as number, currentChatId),
+			// chat(selectedConversation.value[0].id, current_model_id.value, inputQuestion.value, regenerate, currentChatId ),
 			inputQuestion.value = ''
 		]);
-		updateAnswerInChats(answer);
 	} catch (error) {
 		updateAnswerInChats('None');
 		console.error('Error during chat:', error);
+		store.dispatch("chat/setChatLoadingStatus", false);
 	} finally {
-		isLoading.value = false;
-		// isRegenerate.value = false;
-		console.log("loading end");
 	}
 }
 
@@ -415,7 +413,12 @@ function updateAnswerInChats(updatedAnswer:string) {
     });
 }
 
-function deleteChatById(chatId: number){
+async function handleAnswerUpdate(answer: string, index: number){
+	selectedChats.value[index].AI = answer;
+	console.log(`更新chat AI:${answer}, index:${index}`);
+}
+
+function deleteChatById(chatId: number){ 
 	const index = selectedConversation.value[0].chats.findIndex(chat => chat.id === chatId);
 	if (index !== -1) {
 		selectedConversation.value[0].chats .splice(index, 1);
@@ -430,10 +433,6 @@ function updateTitleInConversation() {
 	}
 }
 
-function clearLastInvalidChat() {
-	selectedConversation.value[0].chats = selectedConversation.value[0].chats.filter(chat => chat.hasOwnProperty('id') && chat.id != null && typeof chat.id === 'number');
-  	selectedChats.value = selectedConversation.value[0].chats
-}
 
 function editQuestion(chat: Chat){
 	if(selectedConversation.value[0].user_id == 'system'){
@@ -781,7 +780,7 @@ html {
 }
 
 .loading-animation-box {
-	min-height: 80px;
-	margin-top: 20px;
+	min-height: 20px;
+	margin-top: 5px;
 	margin-left: 40px;
 }</style>

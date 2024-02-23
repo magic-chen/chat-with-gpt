@@ -67,3 +67,9 @@ export default {
     }
   }
 };
+
+// export default createStore({
+//   modules: {
+//     publicData: publicDataModule
+//   }
+// });

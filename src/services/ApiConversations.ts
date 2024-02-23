@@ -21,7 +21,6 @@ export async function deleteConversation(id: number|undefined) {
         'Content-Type': 'application/json',
       },
     });
-    console.log(JSON.stringify(response.data));
   } catch (error) {
     console.error(error);
   }
@@ -39,14 +38,11 @@ export async function CreateOrUpdateConversation( data:string) {
       },
       data: data
     };
-	console.log("CreateOrUpdateConversation request: ", data)
 
     const response = await user_axios(config);
-	if(response.data.code === 200){
-		console.log("CreateOrUpdateConversation response: ", response.data)
-		return response.data.data
-	}
-    console.log(JSON.stringify(response.data));
+    if(response.data.code === 200){
+      return response.data.data
+    }
   } catch (error) {
     console.error(error);
   }

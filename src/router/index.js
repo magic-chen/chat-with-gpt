@@ -10,6 +10,7 @@ import Privacy from '@/components/Privacy.vue';
 import GPTSCreate from '@/components/GPTSCreate.vue';
 import store from '@/store/index';
 import WechatLogin from '@/components/WechatLogin.vue';
+import FetchTest from '@/components/FetchTest.vue';
 
 const routes = [{
         path: '/',
@@ -50,6 +51,11 @@ const routes = [{
         path: '/wechat-login',
         name: 'WechatLogin',
         component: WechatLogin,
+    },
+    {
+        path: '/fetch',
+        name: 'FetchTest',
+        component: FetchTest,
     },
 ];
 

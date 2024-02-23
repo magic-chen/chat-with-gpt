@@ -1,10 +1,12 @@
 // src/config.ts
 export const API_HOST = import.meta.env.VITE_BACKEND_HOST;
 export const PROD_HOST = import.meta.env.VITE_UPLOAD_HOST
+export const FETCH_HOST = import.meta.env.VITE_FETCH_CHAT_HOST
 
 export const apiConfig = {
   conversations: `${API_HOST}/conversations`,
   chat: `${API_HOST}/chat`,
+  fetch: `${FETCH_HOST}/fetch-chat`,
   chat_test: `${API_HOST}/chat_test`,
   models: `${API_HOST}/models`,
   model_by_id: `${API_HOST}/model_by_id`,

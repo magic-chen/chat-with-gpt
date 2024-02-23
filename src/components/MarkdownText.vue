@@ -82,7 +82,6 @@ watchEffect(() => {
   font-size: 14px;
 }
 :deep(code){
-
   white-space: inherit; 
 }
 
