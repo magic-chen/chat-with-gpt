@@ -7,7 +7,7 @@ import './assets/styles/styles.css'
 import 'highlight.js/styles/default.css';
 import axios from 'axios'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import FloatButton from './components/FloatButton.vue'
+import SwitchEngine from './components/SwitchEngine.vue'
 import RobotList from './components/RobotList.vue'
 import ChatTest from './components/ChatTest.vue'
 import Login from './components/Login.vue'; 
@@ -34,7 +34,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 app.directive('scroll-bottom', {});
-app.component('FloatButton', FloatButton);
+app.component('SwitchEngine', SwitchEngine);
 app.component('RobotList', RobotList);
 app.component('ChatTest', ChatTest);
 app.component('Login', Login);

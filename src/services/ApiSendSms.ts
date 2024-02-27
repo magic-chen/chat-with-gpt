@@ -3,7 +3,7 @@ import axios from "axios";
 
 
 export async function sendSms(phoneNumber: string): Promise<boolean>{
-    console.log(phoneNumber)
+    // console.log(phoneNumber)
     try {
       const response = await axios.get(`${apiConfig.send_sms}?phone_number=${phoneNumber}`);
       if(response.status === 200){

@@ -1,6 +1,6 @@
 <template>
     <div class="login-logout-container" :style="props.style">
-            <div v-if="isLogin" class="login-div"  @mouseover="isShowLoginInfo = true" @mouseleave="isShowLoginInfo = false">
+            <div v-if="isLogin" class="login-div"  @mouseover="onMouseOver" @mouseleave="onMouseLeave">
                 <div class="login-header">
                     
                     <el-avatar v-if="isUserHasAvatar" class="card-avatar" :size="30" shape="circle"
@@ -13,16 +13,19 @@
                     </el-avatar>
                     <div type="text"  :style="{color: loginHeaderColor}" class=“login-info-button”>{{userName}}</div>
                 </div>
-                
                 <div v-if="isShowLoginInfo" class="login-info-div">
                     <a-button type="text" class="login-info-button" :icon="h(SettingOutlined)">设置</a-button>
                     <a-button type="text" class="login-info-button" :icon="h(LogoutOutlined)" @click="logout">登出</a-button>
-                </div>
+            </div>
+                
             </div>
             <div v-else>
                 <el-button type="success" @click="clickLogin">登录</el-button>
             </div>
+
+            
     </div>
+
 </template>
 
 <script setup lang="ts">
@@ -52,6 +55,7 @@
         }
     });
 
+    // const dynamicZIndex = ref(1000);
     const store = useStore();
     const isUserHasAvatar = ref(false);
     const isLogin = computed(() => store.state.public_data.isLogined);
@@ -94,6 +98,14 @@
         showLoginInfo();
     }
 
+    function onMouseOver() {
+      isShowLoginInfo.value = true;
+    }
+
+    function onMouseLeave() {
+      isShowLoginInfo.value = false;
+    }
+
 </script>
 
 <style scoped>
@@ -120,6 +132,7 @@
         color: black;
     }
 
+
     .login-header {
         display: flex;
         flex-direction: row;
@@ -136,6 +149,7 @@
         width: 100%;
         background-color: var(--gray-100);
         border-radius: 2%;
+        z-index: 4;
     }
 
     .login-info-button {

@@ -10,7 +10,7 @@ export default {
   mutations: {
     ADD_MESSAGE(state, message) {
       state.messages.push(message);
-      console.log(`ADD:${message}， current messages is: ${state.messages.join("")}`);
+      // console.log(`ADD:${message}， current messages is: ${state.messages.join("")}`);
     },
     CLEAR_MESSAGES(state) {
       state.messages.length = 0;
@@ -20,7 +20,7 @@ export default {
     },
     SET_CHAT_LOADING_STATUS(state, loading_status){
       state.is_loading_chat = loading_status;
-      console.log(`set chat loading to ${loading_status}`);
+      // console.log(`set chat loading to ${loading_status}`);
     }
   },
   // Actions

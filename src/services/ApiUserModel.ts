@@ -5,7 +5,6 @@ import Cookies from 'js-cookie';
 
 export async function getUserModels(limit: number, type: string): Promise<Model[]> {
   try {
-	console.log("get user models request")
   let user_id = Cookies.get('userId');
   const response = await user_axios.get(`${apiConfig.user_model}?user_id=${user_id}&limit=${limit}&type=${type}`);
     
@@ -31,14 +30,11 @@ export async function setModelFavorite(model_id: number, type: string){
           "type": type,
       }
     };
-  	console.log("set model favorite request");
   
     const response = await user_axios(request);
   	if(response.data.code === 200){
-  		console.log("create model response: ", response.data)
   		return true;
   	}
-    console.log(JSON.stringify(response.data));
   } catch (error) {
     console.error(error);
   }
@@ -57,14 +53,11 @@ export async function deleteUserModel(model_id: number){
         'Content-Type': 'application/json'
       }
     };
-      console.log("delete user model request");
   
     const response = await user_axios(request);
       if(response.data.code === 200){
-          console.log("delete user model response: ", response.data)
           return true;
       }
-    console.log(JSON.stringify(response.data));
   } catch (error) {
     console.error(error);
   }

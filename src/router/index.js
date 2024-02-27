@@ -5,8 +5,8 @@ import {
 } from 'vue-router';
 import Chat from '@/components/Chat.vue';
 import GPTS from '@/components/GPTS.vue';
-import User from '@/components/User.vue';
-import Privacy from '@/components/Privacy.vue';
+import UserAgreement from '@/components/UserAgreement.vue';
+import PrivacyAgreement from '@/components/PrivacyAgreement.vue';
 import GPTSCreate from '@/components/GPTSCreate.vue';
 import store from '@/store/index';
 import WechatLogin from '@/components/WechatLogin.vue';
@@ -29,13 +29,13 @@ const routes = [{
     },
     {
         path: '/user-agreement',
-        name: 'User',
-        component: User,
+        name: 'UserAgreement',
+        component: UserAgreement,
     },
     {
         path: '/privacy',
-        name: 'Privacy',
-        component: Privacy,
+        name: 'PrivacyAgreement',
+        component: PrivacyAgreement,
     },
     {
         path: '/GPTS/create',

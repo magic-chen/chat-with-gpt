@@ -50,7 +50,7 @@ const fetchEventSource = (url: string, options: any) => {
       const read = () => {
         reader.read().then(({ done, value }) => {
           const data = decoder.decode(value, { stream: true });
-          console.log(`RECV:${data}`);
+          // console.log(`RECV:${data}`);
           
           if (data === '__END__') {
               isEnd = true;
@@ -95,7 +95,7 @@ function setupFetchEventSource(options: any) {
       closeSSE();
     },
     onmessage: (event: any) => {
-      console.log("dispatch add message event")
+      // console.log("dispatch add message event")
       store.dispatch('chat/addMessage', event as string);
     },
     onerror: (e: any) => {
@@ -145,7 +145,7 @@ async function waitForMessagesEmpty() {
       } else {
         await new Promise(resolve => setTimeout(resolve, 500));
         hasBeenEmptyFor += 500;
-        console.log("message is empty...");
+        // console.log("message is empty...");
       }
     } else {
       hasBeenEmptyFor = 0;

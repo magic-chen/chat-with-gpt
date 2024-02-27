@@ -50,14 +50,6 @@ const inputQuestion = ref('');
 const isLoading = ref(false);
 const inComposition = ref(false)
 
-watchEffect(() => {
-    if(props.modelId){
-        console.log('modelId has changed:', props.modelId);
-        
-    }else{
-         console.log('modelId has not changed:', props.modelId);
-    }
-});
 
 onMounted(async () => {
     console.log("test_conversation_id", testConversationId.value)
@@ -74,12 +66,12 @@ function handleCompositionEnd() {
 function handleKeyDown(event:KeyboardEvent): void{
 	const isCtrlKey = event.ctrlKey || event.metaKey;
 	if (isCtrlKey && event.key === 'Enter') {
-		console.log("用户用enter换行")
+		// console.log("用户用enter换行")
 	    inputQuestion.value += "\n";
 	}else if(inComposition.value && event.key === 'Enter'){
-		console.log("用户用enter选择输入信息")
+		// console.log("用户用enter选择输入信息")
 	}else if(!inComposition.value && event.key === 'Enter'){
-		console.log("开始提交")
+		// console.log("开始提交")
 		event.preventDefault();
 		handleSubmit()
 	} 
@@ -88,7 +80,7 @@ function handleKeyDown(event:KeyboardEvent): void{
 async function handleSubmit(){
 	inputQuestion.value = inputQuestion.value.replace(/^(\r\n|\n|\r)+|(\r\n|\n|\r)+$/g, "");
 	if(inputQuestion.value.trim() === ""){
-		console.log("无效提交")
+		// console.log("无效提交")
 		return
 	}
 	

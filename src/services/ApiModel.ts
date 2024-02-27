@@ -40,14 +40,14 @@ export async function updateCurrentModel(model_id: number){
 		  "model_id": model_id
 	  }
     };
-  	console.log("updateCurrentModel request update model id to: ", model_id);
+  	// console.log("updateCurrentModel request update model id to: ", model_id);
   
     const response = await user_axios(request);
   	if(response.data.code === 200){
-  		console.log("updateCurrentModel response: ", response.data)
+  		// console.log("updateCurrentModel response: ", response.data)
   		return response.data.data
   	}
-    console.log(JSON.stringify(response.data));
+    // console.log(JSON.stringify(response.data));
   } catch (error) {
     console.error(error);
   }
@@ -67,14 +67,11 @@ export async function createModel( model_data: ModelRequest){
           "model": model_data
       }
     };
-  	console.log("create model request");
   
     const response = await user_axios(request);
   	if(response.data.code === 200){
-  		console.log("create model response: ", response.data)
   		return response.data.data["model_id"]
   	}
-    console.log(JSON.stringify(response.data));
   } catch (error) {
     console.error(error);
   }
@@ -90,14 +87,11 @@ export async function updateModel(model_id: number, model_data: ModelRequest){
       },
       data: model_data
     };
-  	console.log("update model request");
   
     const response = await user_axios(request);
   	if(response.data.code === 200){
-  		console.log("update model response: ", response.data)
   		return true;
   	}
-    console.log(JSON.stringify(response.data));
   } catch (error) {
     console.error(error);
     return false;
@@ -113,14 +107,11 @@ export async function deleteModel(model_id: number){
         'Content-Type': 'application/json'
       }
     };
-  	console.log("delete model request");
   
     const response = await user_axios(request);
   	if(response.data.code === 200){
-  		console.log("delete model response: ", response.data)
   		return
   	}
-    console.log(JSON.stringify(response.data));
   } catch (error) {
     console.error(error);
   }

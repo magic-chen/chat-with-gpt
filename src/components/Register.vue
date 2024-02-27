@@ -71,7 +71,6 @@ const timer = ref<NodeJS.Timeout | null>(null);
 function closeDialog() {
     emit('update:open', false);
     if (timer) {
-        console.log("Clearing timer:", timer);
 
         clearInterval(timer as unknown as NodeJS.Timeout);
         timer.value = null;
@@ -79,7 +78,6 @@ function closeDialog() {
 }
 
 async function regist() {
-    console.log("click register button")
 
     if (!isPhoneNumber(account.value.name)) {
         errorMessage.value = '请输入有效的手机号';
@@ -96,7 +94,6 @@ async function regist() {
         return;
     }
 
-    console.log(`account value: `, JSON.stringify(account.value))
     let result = await register(account.value.name, CryptoJS.SHA256(account.value.pw).toString(), captcha.value);
     if(result){
         closeDialog();

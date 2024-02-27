@@ -52,7 +52,7 @@ export async function chatTest(test_conversation_id:string,  model_id: number, i
 
   try {
     var data = JSON.stringify({"test_conversation_id": test_conversation_id,  "user_id":user_id, "model_id":model_id, "input_text":input_text})
-	console.log("chat request: ", data)
+	// console.log("chat request: ", data)
     var config = {
       method: 'post',
       url: `${apiConfig.chat_test}`,
@@ -64,7 +64,7 @@ export async function chatTest(test_conversation_id:string,  model_id: number, i
 
     const response = await user_axios(config)
 	if(response && response.data.code === 200){
-		 console.log("chat response: ", response.data)
+		//  console.log("chat response: ", response.data)
 		 return response.data.data.content
 	}
   } catch (error) {

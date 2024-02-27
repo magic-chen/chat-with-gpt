@@ -115,7 +115,7 @@
     import { ref, onMounted, computed, reactive, h, onUnmounted } from 'vue';
     import { getModels, deleteModel, } from '@/services/ApiModel';
     import { deleteUserModel, getUserModels, setModelFavorite } from '@/services/ApiUserModel';
-    import { maxCardReturn, typesConfig } from '@/config';
+    import { maxCardReturn, typesConfig, upgradeUserServiceText } from '@/config';
     import { Model } from '@/types/Model';
     import { StarFilled, StarOutlined, FormOutlined, DeleteOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
     import { useRouter } from 'vue-router';
@@ -123,6 +123,7 @@
     import image1 from '@/assets/prompt_bg2.webp';
     import image2 from '@/assets/prompt_bg2.webp';
     import { useStore } from 'vuex';
+import { ElMessage } from 'element-plus';
 
     const images = ref([image1, image2]);
     const router = useRouter();
@@ -259,10 +260,19 @@
     }
 
     function onChatClick(card : Model) {
-        console.log(`click card ${card.id}`)
+        // console.log(`click card ${card.id}`)
         if(!isLogin.value){
             store.dispatch('public_data/showLoginDialog');
         }
+
+        if(store.state.public_data.user.user_service_level_id < 2 && card.id == 1){
+            ElMessage.warning(upgradeUserServiceText);
+            return;
+        }else if(store.state.public_data.user.user_service_level_id < 3 && card.id == 2){
+            ElMessage.warning(upgradeUserServiceText);
+            return;
+        }
+
         store.dispatch('public_data/setCurrentUserModelId', card.id)
         router.push({ path: '/chat'});
     }

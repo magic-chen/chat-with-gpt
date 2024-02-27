@@ -11,6 +11,7 @@ export const apiConfig = {
   models: `${API_HOST}/models`,
   model_by_id: `${API_HOST}/model_by_id`,
   user_model: `${API_HOST}/user_model`,
+  user_settings: `${API_HOST}/user/settings`,
   delete_user_model: `${API_HOST}/delete_user_model`,
   select_model: `${API_HOST}/select_model`,
   create_model: `${API_HOST}/create_model`,
@@ -29,3 +30,4 @@ export const apiConfig = {
 export const maxCardReturn = 10;
 export const maxHoursExpire = 8;
 export const typesConfig = ["文案", "求职", "程序", "产品",  "运营", "外语", "绘画", "其它"]
+export const upgradeUserServiceText = "请升级到更高级服务，解锁更多工具和特色功能。" 

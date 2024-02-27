@@ -13,11 +13,11 @@ export default {
   mutations: {
     setCurrentUserModelId(state, value) { 
       state.currentUserModelId = value;
-      console.log('set current model id to ', value)
+      // console.log('set current model id to ', value)
     },
     setUser(state, value) { 
       state.user = value;
-      console.log('set user to ', value)
+      // console.log('set user to ', value)
     },
     setCurrentModel(state, Model) {
       state.currentModel = Model;
@@ -57,13 +57,13 @@ export default {
     },
     login({commit}) {
       commit('setIsLogined', true);
-      console.log("set isLogined to true")
+      // console.log("set isLogined to true")
     },
     logout({commit}){
       commit('setIsLogined', false);
       clearLoginData();
       window.location.href = '/';
-      console.log("Logout and clear login data")
+      // console.log("Logout and clear login data")
     }
   }
 };

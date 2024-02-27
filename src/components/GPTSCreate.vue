@@ -104,7 +104,7 @@ const modelData = reactive<Model>({
 });
 const canPublish = computed(() => {
       let result =  !modelData.name || !modelData.type || !modelData.prompt || !modelData.src;
-      console.log(`name: ${!modelData.name}\ntype ${!modelData.name}\n prompt ${!modelData.prompt}\n src ${!modelData.src}\n `);
+    //   console.log(`name: ${!modelData.name}\ntype ${!modelData.name}\n prompt ${!modelData.prompt}\n src ${!modelData.src}\n `);
       return result;
 });
 type StringDict = {
@@ -150,7 +150,7 @@ async function publish(){
             ElMessage.error("发布失败")
         }
     }else{
-        console.log(`发布前model id 为${modelId.value}`)
+        // console.log(`发布前model id 为${modelId.value}`)
         modelId.value = await createModel(model);
         if(modelId.value){
             ElMessage.success("发布成功")
@@ -183,10 +183,10 @@ function beforeAvatarUpload(file: any) {
     const isJPG = file.type === 'image/jpeg';
     const isPNG = file.type === 'image/png';
     const isLt2M = file.size / 1024 / 1024 < 2;
-    console.log(`upload file type ${file.type}`)
+    // console.log(`upload file type ${file.type}`)
 
     if (!isJPG && !isPNG) {
-        console.log('bad file')
+        // console.log('bad file')
         ElMessage.error('上传头像图片只能是 JPG/PNG 格式!');
         return false;
     }
@@ -220,7 +220,7 @@ function beforeAvatarUpload(file: any) {
 function handleAvatarSuccess(response: any, file: any) {
     const fileUrl = response.data.url;
     modelData.src = fileUrl;
-    console.log(`upload response url: ${fileUrl}`);
+    // console.log(`upload response url: ${fileUrl}`);
     ElMessage.success('上传头像成功!');
 }
 

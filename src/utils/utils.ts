@@ -71,7 +71,6 @@ export async function getVerifyCode(event:any, phoneNumber:string, countdown:any
   if (!phoneNumber) {
     ElMessage.error("手机号不能为空");
   }
-  console.log("get verify code, countdown value is :", countdown.value)
   if (countdown.value === 0) {
       countdown.value = 120;
       try{
@@ -92,7 +91,6 @@ export async function getVerifyCode(event:any, phoneNumber:string, countdown:any
           console.error('Error sending SMS:', error);
           return "发送验证码出错, 请重新再试"
       }
-      console.log("get verify code, countdown value is :", countdown.value)
 
   }
 }

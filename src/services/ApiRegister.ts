@@ -16,7 +16,7 @@ export async function register(account_name: string, password: string, verify_co
         'verify_code': verify_code
       }
     };
-    console.log("register request");
+    // console.log("register request");
 
     const response = await axios(request);
 
@@ -24,7 +24,7 @@ export async function register(account_name: string, password: string, verify_co
       ElMessage.success('注册成功');
     }
 
-    console.log(`register response: ${response.data} `)
+    // console.log(`register response: ${response.data} `)
     return true;
   } catch (error) {
     

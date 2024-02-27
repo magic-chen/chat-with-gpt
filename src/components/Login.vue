@@ -120,7 +120,7 @@ onMounted(() => {
 
 function initWxLogin() {
     let redirect_url = encodeURIComponent(apiConfig.wxlogin_redirect_url);
-    console.log(`uri: ${redirect_url}`);
+    // console.log(`uri: ${redirect_url}`);
     if (typeof WxLogin !== 'undefined') {
         var obj = new WxLogin({
             self_redirect: true,
@@ -153,7 +153,7 @@ async function login() {
 
 function handleTabChange(key: string) {
     activeTab.value = tabNames[key];
-    console.log(`active tab is ${activeTab.value}`)
+    // console.log(`active tab is ${activeTab.value}`)
     if (key === '3') {
         nextTick(() => {
       initWxLogin();

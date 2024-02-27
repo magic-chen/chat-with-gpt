@@ -21,7 +21,7 @@ export async function loginWithAccount(account_name: string, password: string): 
         'type': '账号登录'
       }
     };
-    console.log("login request");
+    // console.log("login request");
 
     const response = await axios(request);
 
@@ -30,7 +30,7 @@ export async function loginWithAccount(account_name: string, password: string): 
       onLoginSuccess(user, access_token, refresh_token )
     }
 
-    console.log(`login response: ${response.data} `)
+    // console.log(`login response: ${response.data} `)
     return true;
   } catch (error) {
     
@@ -72,7 +72,7 @@ export async function loginWithPhone(phone: string, captcha: string): Promise<bo
       onLoginSuccess(user, access_token, refresh_token )
     }
 
-    console.log(`login response: ${response.data} `)
+    // console.log(`login response: ${response.data} `)
     return true;
   } catch (error) {
     
@@ -99,7 +99,7 @@ export async function loginWithWechat(code:string){
     if (response.status === 200) {
       const { user, access_token, refresh_token } = response.data.data;
       onLoginSuccess(user, access_token, refresh_token )
-      console.log("wechat login success")
+      // console.log("wechat login success")
     }
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -168,7 +168,7 @@ export async function getAccessToken() : Promise<string|undefined> {
 
   try {
     const newAccessToken = await getNewAccessToken(refreshToken);
-    console.log(`getAccessToken, new token is: ${newAccessToken}`);
+    // console.log(`getAccessToken, new token is: ${newAccessToken}`);
 
     if (newAccessToken) {
       setCookie('accessToken', newAccessToken, maxHoursExpire);

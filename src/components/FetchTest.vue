@@ -164,10 +164,9 @@ const sendData = () => {
         console.log("开始连接fetch")
         typewriter.value.textContent = ''
         html_text.value = ''
-        // connectFetch(75, inputText.value, false, 254, 0);
         connectFetch(1, inputText.value, false, 259, 0);
     } else {
-        console.log("找不到typewriter")
+        // console.log("找不到typewriter")
     }
     inputText.value = '';
 };

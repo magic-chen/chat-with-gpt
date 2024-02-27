@@ -38,12 +38,12 @@
 		</el-aside>
 
 		<el-container class="chat-panel">
-			<el-header class="chat-content-header">
-				<FloatButton />
-				<LoginLogout bgColor="white"></LoginLogout>
-			</el-header>
 
 			<el-main class="chat-content">
+				<div class="chat-content-header">
+					<LoginLogout bgColor="white"  :style="{ position: 'absolute', top: '5px', right: '25px',  minHeight: '50px' }"></LoginLogout>
+					<SwitchEngine  :style="{ position: 'absolute', top: '5px', left: '15px',  minHeight: '50px' }"/>
+				</div>
 				<div class="chat-panel-middle" v-scroll-bottom>
 					<div v-for="(chat, index) in selectedChats" :key="index">
 						<div v-if="chat.HUMAN && chat.HUMAN.length > 0">
@@ -243,7 +243,6 @@ onMounted(async () => {
 		//1. 获取模型信息
 		const model = await getModelById(current_model_id.value);
 		current_model_name.value = model.name;
-		console.log("用户当前模型name: ", model.name)
 
 
 		//2. 获取对话信息
@@ -415,7 +414,7 @@ function updateAnswerInChats(updatedAnswer:string) {
 
 async function handleAnswerUpdate(answer: string, index: number){
 	selectedChats.value[index].AI = answer;
-	console.log(`更新chat AI:${answer}, index:${index}`);
+	// console.log(`更新chat AI:${answer}, index:${index}`);
 }
 
 function deleteChatById(chatId: number){ 
@@ -464,7 +463,6 @@ function copyToClipboard(content: string) {
 	document.body.removeChild(el);
 
 	copied.value = true;
-	console.log(`copy content is ${content}`);
 	setTimeout(() => {
 		copied.value = false;
 	}, 2000);
@@ -608,32 +606,32 @@ html {
 
 .chat-panel {
 	display: flex;
+	width: 100%;
 	height: calc(100vh - 95px);
 	overflow-y: auto;
 }
-
-.chat-content-header {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	padding-left: 15px;
-	padding-right: 15px;
-	justify-content: space-between;
-	height: 50px;
-	width: 100%;
-	background-color: rgba(0, 0, 0, 0.0);
-}
-
-.el-header::after {
-	background-color: rgba(0, 0, 0, 0.0);
-}
-
 .chat-content {
 	display: flex;
+	flex-direction: column;
 	justify-content: center;
+	align-items: center;
 	height: 100%;
 	padding: 0;
 	width: 100%;
+	position: relative; 
+}
+
+.chat-content-header {
+	position: sticky;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	top: 0px;
+	height: 60px;
+	width: 100%;
+	background-color: white;
+	z-index: 6;
 }
 
 
@@ -642,8 +640,6 @@ html {
 	height: 100%;
 	max-width: 650px;
 	min-width: 650px;
-	flex-grow: 2;
-	position: relative;
 }
 
 .chat-panel-middle::-webkit-scrollbar {
