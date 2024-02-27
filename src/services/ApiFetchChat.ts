@@ -61,7 +61,6 @@ const fetchEventSource = (url: string, options: any) => {
           
           if(count >= 5 || isEnd || done){
             onmessage && onmessage(accumulatedDataArray.join(""));
-            console.log("on message")
             accumulatedDataArray = [];
             count = 0;
           }

@@ -12,7 +12,7 @@ export async function chat(id: number|undefined, model_id: number, input_text: s
 
   try {
     var data = JSON.stringify({"id":id, "user_id":user_id, "model_id":model_id, "input_text":input_text, "is_regenerate": is_regenerate, "chat_id": chat_id})
-    console.log("chat request: ", data)
+    // console.log("chat request: ", data)
     var config = {
       method: 'post',
       url: `${apiConfig.chat}`,
@@ -29,7 +29,7 @@ export async function chat(id: number|undefined, model_id: number, input_text: s
     }
   } catch (error) {
     if (axios.isCancel(error)) {
-      console.log('Request canceled:', error.message);
+      // console.log('Request canceled:', error.message);
     } else {
       console.error(error);
       let error_message = '<span style="color: red;">抱歉，请求出错。请稍后重试</span>';

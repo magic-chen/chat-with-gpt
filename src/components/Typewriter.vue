@@ -69,7 +69,7 @@ async function processNextMessage() {
     if (typewriter.value && !typingEffectInProgress && store.state.chat.messages.length > 0) {
         typingEffectInProgress = true;
         let newMessage = store.state.chat.messages.shift();
-        console.log(`SHIFT: ${newMessage}`)
+        // console.log(`SHIFT: ${newMessage}`)
         if (newMessage != null) {
             await displayTypewriterEffect(typewriter.value, newMessage);
         }
@@ -88,7 +88,7 @@ async function displayTypewriterEffect(typewriter: HTMLElement, message: string,
 
     const oldContent = newRenderedHTML.substring(0, len); //重新渲染后和未渲染前的公共内容
     const newContent = newRenderedHTML.replace(oldContent, ""); //重新渲染后去掉公共部分的剩余内容
-    console.log(`渲染前的text:${lastRenderedHTML}\n\n新增内容:${newContent}\n\n渲染后的text:${newRenderedHTML}`);
+    // console.log(`渲染前的text:${lastRenderedHTML}\n\n新增内容:${newContent}\n\n渲染后的text:${newRenderedHTML}`);
 
     await appendContentToPage(oldContent, newContent);
     count += 1;
