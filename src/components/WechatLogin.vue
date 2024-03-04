@@ -13,7 +13,7 @@
 
     onMounted(async () => {
         if(code.value != undefined){
-            console.log("重定向到wechat-login页面")
+            // console.log("重定向到wechat-login页面")
             window.parent.location.href = `/wechat-login?newcode=${code.value}`;
         }else if(newcode.value != undefined){
             await loginWithWechat(newcode.value as string)

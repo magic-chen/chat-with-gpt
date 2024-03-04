@@ -99,13 +99,19 @@
                 
                 <img width="50" height="50" src="/src/assets/email.svg"/>
             </div>
-            <div class="declare">
-                版权所有©2024段栈边码
-            </div>
+            
             <div class="agreements">
-                <a href="/user-agreement" target="_blank">用户协议</a>
-                <a href="/privacy" target="_blank">隐私政策</a>
-                <a href="https://beian.miit.gov.cn">沪ICP备2024046294号-1</a>
+                <a href="/user-agreement" target="_blank" style="color: white;">用户协议</a>
+                <a href="/privacy" target="_blank" style="color: white;">隐私政策</a>
+            </div>
+
+            <div class="beian">
+                <a href="https://beian.miit.gov.cn" rel="noreferrer" target="_blank">沪ICP备2024046294号-1</a>
+                <a href="https://beian.mps.gov.cn/#/query/webSearch?code=31011702889044" rel="noreferrer" target="_blank">沪公网安备31011702889044</a>
+            </div>
+
+            <div class="declare">
+                Powered By 段栈边码　Copyright 2023-2024 All Rights Reserved.
             </div>
         </el-footer>
     </el-container>
@@ -123,7 +129,7 @@
     import image1 from '@/assets/prompt_bg2.webp';
     import image2 from '@/assets/prompt_bg2.webp';
     import { useStore } from 'vuex';
-import { ElMessage } from 'element-plus';
+    import { ElMessage } from 'element-plus';
 
     const images = ref([image1, image2]);
     const router = useRouter();
@@ -481,19 +487,20 @@ import { ElMessage } from 'element-plus';
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        background-color: black;
-        height: 150px;
+        background-color: #404444;
+        height: 200px;
         color: #8f8f8f;
         font-size: 12px;
         a {
             color: #8f8f8f;
         }
     }
+    
     .contact {
         display: flex;
         flex-direction: row;
-        height:60px;
-        margin-top: 20px;
+        height:50px;
+        margin-top: 10px;
         margin-bottom: 10px;
         gap: 10px;
        
@@ -526,8 +533,28 @@ import { ElMessage } from 'element-plus';
         display: flex;
         flex-direction: row;
         gap: 10px;
-        position: bottom;
         margin-top: 5px;
+        margin-bottom: 5px;
+    }
+
+    .beian {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        font-size: 12px;
+        font-weight: 400;
+
+    }
+
+    .declare {
+        font-size: 12px;
+        font-weight: 400;
+        margin-top: 10px;
+        margin-bottom: 15px;
+        color: #9D9D9D;
+
     }
     
 </style>

@@ -52,7 +52,7 @@ const inComposition = ref(false)
 
 
 onMounted(async () => {
-    console.log("test_conversation_id", testConversationId.value)
+    // console.log("test_conversation_id", testConversationId.value)
 });
 
 

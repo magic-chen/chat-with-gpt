@@ -35,6 +35,12 @@
 					</el-menu-item>
 				</el-menu>
 			</div>
+
+			<div class="upgrade-div" @click="openProductModal">
+					<ThunderboltFilled style="font-size: 22px; color:yellow"/>
+					<span class="avatar-icon-text">升级你的服务</span>
+					<Product v-model:open="isShowProductModal" />
+			</div>
 		</el-aside>
 
 		<el-container class="chat-panel">
@@ -90,7 +96,6 @@
 								</el-avatar>
 								<span class="name">{{ current_model_name }}</span>
 						</div>
-						<!-- <span>索引：{{ index }} 长度：{{ selectedChats.length }}</span> -->
 
 						<div v-if="chat.AI">
 							<div class="answer-row">
@@ -163,7 +168,7 @@ import { useRouter } from 'vue-router';
 import { scrollToBottom, getColorForTitle, convertFourDigitsToTwoLetters } from '@/utils/utils';
 import { useStore } from 'vuex';
 import { ElMessage } from 'element-plus';
-import {PauseCircleOutlined} from '@ant-design/icons-vue';
+import {PauseCircleOutlined, ThunderboltFilled} from '@ant-design/icons-vue';
 import { User } from '@/types/User';
 import { connectFetch } from '@/services/ApiFetchChat';
 
@@ -178,6 +183,7 @@ const selectedChats = ref<Chat[]>([]);
 const default_conversation_title = "新的对话";
 const inComposition = ref(false);
 const isLoading = computed(() => store.state.chat.is_loading_chat);
+const isShowProductModal = ref(false);
 const inputStyle = {
 	borderRadius: '20px',
 	boxShadow: '0 4px 10px gray',
@@ -270,6 +276,10 @@ async function handleNewChatClick() {
 
 function handleGoToShop() {
 	router.push({ path: '/GPTS' });
+}
+
+function openProductModal() {
+	isShowProductModal.value = true;
 }
 
 
@@ -514,28 +524,58 @@ html {
 }
 
 .sidebar {
+	display: flex;
+	padding: 5px;
+	flex-direction: column;
+	align-items: flex-start;
 	background-color: black;
 }
 
 .header-sidebar {
-	min-height: 90px;
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
+	height: 90px;
+	width: 96%;
 	margin-top: 10px;
-	margin-left: 24px;
+	margin-left: 5px;
+	margin-right: 5px;
 	margin-bottom: 30px;
+	gap: 5px;
 	background-color: black;
+	cursor: pointer;
+}
+
+.chat-history {
+	display: flex;
+	flex : 1;
+	width: 100%;
+}
+
+.upgrade-div {
+	display: flex;
+	align-items: center;
+	width: 96%;
+	height: 45px;
+	
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-bottom: 5px;;
+	padding-left: 24px;
+	gap: 10px;
+	border-radius: 20px;
 	cursor: pointer;
 }
 
 .avatar-icon-text-div {
 	display: flex;
 	align-items: center;
+	height: 45px;
 	flex-grow: 1;
+	padding-left: 24px;
 	gap: 15px;
 	width: 100%;
-	border-radius: 15px;
+	border-radius: 20px;
 }
 
 .icon-white {
@@ -562,12 +602,15 @@ html {
 	color: #cccccc;
 }
 
-.el-menu .el-menu-item.is-active {
-	background-color: #222;
+.el-menu--vertical {
+ 	width: 100%;
 }
 
-.el-menu .el-menu-item:hover {
-	background-color: #2e2e2e;
+.el-menu .el-menu-item.is-active,
+.el-menu .el-menu-item:hover,
+.avatar-icon-text-div:hover,
+.upgrade-div:hover {
+  background-color: #2e2e2e;
 }
 
 .el-menu-item-style {
@@ -575,8 +618,7 @@ html {
 	display: flex;
 	position: relative;
 	max-height: 42px;
-	border-radius: 15px;
-
+	border-radius: 20px;
 }
 
 .el-menu-item-style::after {
@@ -584,7 +626,6 @@ html {
 }
 
 .title-container {
-	max-width: 150px;
 	font-size: 14px;
 	white-space: nowrap;
 	overflow: hidden;
@@ -603,6 +644,8 @@ html {
 .el-menu-item-style.is-active .delete-icon {
 	display: block;
 }
+
+
 
 .chat-panel {
 	display: flex;

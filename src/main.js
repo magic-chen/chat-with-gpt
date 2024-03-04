@@ -15,7 +15,7 @@ import Register from './components/Register.vue';
 import LoginLogout from './components/LoginLogout.vue';
 import MarkdownText from './components/MarkdownText.vue';
 import Typewriter from './components/Typewriter.vue';
-
+import Product from './components/Product.vue';
 import router from './router';
 import store from './store';
 
@@ -42,6 +42,6 @@ app.component('Register', Register);
 app.component('LoginLogout', LoginLogout);
 app.component('MarkdownText', MarkdownText);
 app.component('Typewriter', Typewriter);
-
+app.component('Product', Product);
 
 app.mount('#app');
