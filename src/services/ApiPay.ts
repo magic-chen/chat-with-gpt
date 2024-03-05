@@ -2,7 +2,6 @@ import { apiConfig } from "@/config";
 import { PurchaseRequest } from "@/types/Pay";
 import user_axios from "./http";
 import { AxiosError } from "axios";
-import { StringGradients } from "ant-design-vue/es/progress/props";
 import Cookies from "js-cookie";
 import { Product } from "@/types/Product";
 
@@ -38,3 +37,28 @@ export async function purchase(reqeust: PurchaseRequest) :Promise<any>{
     }
     return []
   }
+
+  export async function queryOrderStatus(order_id: string) {
+    let user_id = Cookies.get('userId');
+    try{
+      const request = {
+        method: 'post',
+        url: `${apiConfig.query_order_status}`,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        data: {
+          user_id: user_id,
+          order_id: order_id,
+      },
+      }
+      const response = await user_axios(request);
+
+      if (response.data.code !== 200) {
+          throw new Error('Query order status failed');
+      }
+      return response;
+    }catch(error){
+
+    }
+}

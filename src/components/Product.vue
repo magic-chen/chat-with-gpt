@@ -46,7 +46,7 @@
                 </div>
 
                 <a-divider />
-                <div class="contact-info">如遇充值问题，可及时联系客服处理。若有企业版部署和私有模型定制请和商务沟通。</div>
+                <div class="contact-info">如遇充值问题，可及时联系客服处理。若有企业定制需求请和商务沟通。</div>
 
             </div>
         </a-modal>
@@ -64,7 +64,9 @@ import { json } from 'agent-base';
 import hljs from 'highlight.js';
 import Cookies from 'js-cookie';
 import MarkdownIt from 'markdown-it';
-import { computed, ref, reactive, watchEffect } from 'vue'
+import { computed, ref, reactive, watchEffect } from 'vue';
+import { v4 as uuidv4 } from 'uuid';
+
 const props = defineProps({
     open: Boolean
 });
@@ -76,12 +78,14 @@ const current_payment_cycle = ref(payment_cycles[0]);
 const quantity = ref(1);
 const code_url = ref('');
 
+
 const dialogVisible = computed({
     get: () => props.open,
     set: (val) => emit('update:open', val)
 });
 const isPaymentDialogVisible = ref(false);
 const purchaseRequest = ref<PurchaseRequest>({
+    order_id: '',
     user_id: Cookies.get('userId') as string,
     product_id: 0,
     product_name: '',
@@ -173,6 +177,9 @@ function closeDialog() {
 }
 
 async function goToPayment(product: Product) {
+    
+    purchaseRequest.value.order_id = uuidv4().replace(/-/g, '');
+    console.log(`click purchase button..., uuid is ${purchaseRequest.value.order_id}`)
     purchaseRequest.value.product_id = product.id
     purchaseRequest.value.product_name = product.product_name
     purchaseRequest.value.product_quantity = quantity.value
@@ -191,6 +198,8 @@ async function goToPayment(product: Product) {
     // }
     isPaymentDialogVisible.value = true;
 }
+
+
 </script>
 
 

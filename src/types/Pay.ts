@@ -1,4 +1,5 @@
 export interface PurchaseRequest{
+    order_id: string,
     user_id: string,
     product_id: number,
     product_name: string,

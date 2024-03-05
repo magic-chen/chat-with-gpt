@@ -26,7 +26,8 @@ export const apiConfig = {
   wxlogin_callback: `${PROD_HOST}/wechat_login_callback`,
   wxlogin_redirect_url: `http://www.awsgpts.com/wechat-login`,
   purchase: `${API_HOST}/purchase`,
-  products: `${API_HOST}/products`
+  products: `${API_HOST}/products`,
+  query_order_status: `${API_HOST}/query_order_status`
 };
 
 export const maxCardReturn = 10;
