@@ -111,7 +111,7 @@
             </div>
 
             <div class="declare">
-                Powered By 段栈边码　Copyright 2023-2024 All Rights Reserved.
+                Powered By 段栈边码　Copyright 2023-2024 All Rights Reserved
             </div>
         </el-footer>
     </el-container>
@@ -533,19 +533,27 @@
         display: flex;
         flex-direction: row;
         gap: 10px;
+        font-size: 15px;
         margin-top: 5px;
         margin-bottom: 5px;
+        a {
+            text-decoration: none;
+            color: inherit; /* 保持链接的默认颜色 */
+        }
     }
 
     .beian {
         display: flex;
         flex-direction: row;
         gap: 10px;
-        margin-top: 5px;
+        margin-top: 10px;
         margin-bottom: 5px;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 400;
-
+        a {
+            text-decoration: none;
+            color: inherit; /* 保持链接的默认颜色 */
+        }
     }
 
     .declare {

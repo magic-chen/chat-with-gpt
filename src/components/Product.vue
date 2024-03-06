@@ -1,6 +1,6 @@
 <template>
     <div class="product-container">
-        <a-modal v-model:open="dialogVisible" :title="title" :footer="null" @close="closeDialog" width="1000px"
+        <a-modal v-model:open="productDialogVisible" :title="title" :footer="null" @close="closeDialog" width="1000px"
             centered>
             <div class="product-info">
 
@@ -30,10 +30,10 @@
                                 <el-button class="purchase-button" type="success" size="large"
                                     v-if="product.product_name == 'GPT Mini'" @click="goToPayment(product)"
                                     disabled>限时免费中</el-button>
-                                <el-button class="purchase-button" size="large" type="primary" color="#1d4ed8"
+                                <el-button class="purchase-button" size="large" type="primary" color="#1b7f64"
                                     v-else-if="product.product_name == 'GPT Plus'"
                                     @click="goToPayment(product)">升级至Plus</el-button>
-                                <el-button class="purchase-button" size="large" type="primary" color="#1b7f64"
+                                <el-button class="purchase-button" size="large" type="primary" color="#b8860b"
                                     v-else-if="product.product_name == 'GPT Pro'"
                                     @click="goToPayment(product)">升级至Pro</el-button>
                                 <div class="description" v-html="md.render(product.description)"></div>
@@ -60,12 +60,12 @@
 import { getProducts, purchase } from '@/services/ApiPay';
 import { PurchaseRequest } from '@/types/Pay';
 import { Product } from '@/types/Product';
-import { json } from 'agent-base';
 import hljs from 'highlight.js';
 import Cookies from 'js-cookie';
 import MarkdownIt from 'markdown-it';
 import { computed, ref, reactive, watchEffect } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
+import { ElMessage } from 'element-plus';
 
 const props = defineProps({
     open: Boolean
@@ -79,7 +79,7 @@ const quantity = ref(1);
 const code_url = ref('');
 
 
-const dialogVisible = computed({
+const productDialogVisible = computed({
     get: () => props.open,
     set: (val) => emit('update:open', val)
 });
@@ -170,16 +170,16 @@ const md = new MarkdownIt({
 });
 
 function openDialog() {
-    dialogVisible.value = true
+    productDialogVisible.value = true
 };
 function closeDialog() {
-    dialogVisible.value = false
+    productDialogVisible.value = false
 }
 
 async function goToPayment(product: Product) {
     
     purchaseRequest.value.order_id = uuidv4().replace(/-/g, '');
-    console.log(`click purchase button..., uuid is ${purchaseRequest.value.order_id}`)
+    // console.log(`click purchase button..., uuid is ${purchaseRequest.value.order_id}`)
     purchaseRequest.value.product_id = product.id
     purchaseRequest.value.product_name = product.product_name
     purchaseRequest.value.product_quantity = quantity.value
@@ -187,15 +187,15 @@ async function goToPayment(product: Product) {
     purchaseRequest.value.payment_cycle = current_payment_cycle.value
     purchaseRequest.value.payment_amount = totalPrice(product)
 
-
-    // let responseData:any = (await purchase(purchaseRequest.value));
-    // code_url.value = responseData.code_url;
-    // if (code_url.value) {
-    //     closeDialog();
-    //     isPaymentDialogVisible.value = true;
-    // } else {
-    //     ElMessage.error('支付请求异常，请稍后再试');
-    // }
+    
+    let responseData:any = (await purchase(purchaseRequest.value));
+    code_url.value = responseData.code_url;
+    // console.log(`code url: ${code_url.value}`)
+    if (code_url.value) {
+        closeDialog();
+    } else {
+        ElMessage.error('支付请求异常，请稍后再试');
+    }
     isPaymentDialogVisible.value = true;
 }
 

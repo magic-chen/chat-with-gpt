@@ -4,7 +4,6 @@ import { clearLoginData } from '@/utils/utils';
 export default {
   namespaced: true,
   state: () => ({
-    currentUserModelId: null,
     user: null,
     currentModel: null,
     isLoginDialogVisible: false,
@@ -12,7 +11,7 @@ export default {
   }),
   mutations: {
     setCurrentUserModelId(state, value) { 
-      state.currentUserModelId = value;
+      state.user.current_model_id = value;
       // console.log('set current model id to ', value)
     },
     setUser(state, value) { 
@@ -34,7 +33,7 @@ export default {
       commit('setCurrentUserModelId', value);
     },
     getCurrentUserModelId({ state }) {
-      return state.currentUserModelId;
+      return state.user.current_model_id;
     },
     setUser({commit}, value){
       commit('setUser', value);

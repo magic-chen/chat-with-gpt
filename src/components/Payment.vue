@@ -1,9 +1,7 @@
 <template>
     <div>
 
-        <a-modal v-model:open="dialogVisible" :title="title" :footer="null" @close="closeDialog" width="1000px" centered>
-
-            
+        <a-modal v-model:open="paymentDialogVisible" :title="title" :footer="null" @close="closeDialog" width="1000px" centered>
             <div class="pay-info">
                 <div class="order-info">
                     <span>商品名称：{{props.purchase_request?.product_name}}</span>
@@ -51,7 +49,11 @@ import {AlipaySquareFilled} from '@ant-design/icons-vue';
 import { purchase, queryOrderStatus } from '@/services/ApiPay';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { getUserInfo } from '@/services/ApiUser';
+import { useStore } from 'vuex';
 
+
+const store = useStore();
 const router = useRouter();
 const props = defineProps({
     open: Boolean,
@@ -62,7 +64,7 @@ const props = defineProps({
     }
 });
 const emit = defineEmits(['update:open']);
-const dialogVisible = computed({
+const paymentDialogVisible = computed({
     get: () => props.open,
     set: (val) => emit('update:open', val)
 });
@@ -73,35 +75,32 @@ const showAlipayIframe = ref(false);
 const alipayResponseHtml = ref('');
 const isAliPayOrderExsit = ref(false);
 const order_id = ref('')
-const maxAttempts = 30;
+const maxAttempts = 50;
 let attempts = 0;
 
 
-onMounted(() => {
-    isAliPayOrderExsit.value = false;
-    console.log("payment page mounted")
-})
-
 watchEffect(async () => {
-    if (props.purchase_request.order_id !== order_id.value) {
+    console.log(`open: ${props.open}`)
+    if (props.purchase_request.order_id !== order_id.value || props.open === true) {
         order_id.value = props.purchase_request.order_id
         activeTab.value = 'wechat';
         attempts = 0;
-        console.log("open payment, init")
+        await pollOrderStatus(props.purchase_request.order_id);
+        // console.log(`open payment, init, open value is:${props.open}`);
     }
 
-    if(dialogVisible.value === false){
+    if (paymentDialogVisible.value === false) {
         isAliPayOrderExsit.value = false;
         showAlipayIframe.value = false;
-        //终止对上个订单的query动作
+        // 终止对上个订单的 query 动作
         attempts = -1;
-        console.log("close payment, reset")
+        // console.log("reset")
     }
 });
 
 function  closeDialog(){
-    dialogVisible.value = false
-    
+    paymentDialogVisible.value = false;
+    // console.log("closed");
 }
 
 function  activateTab(tab:string){
@@ -119,13 +118,11 @@ async function payToAli(){
     if(isAliPayOrderExsit.value){
         return
     }
-    console.log(`创建新的订单:${order_id.value}`)
+    // console.log(`创建新的订单:${order_id.value}`)
     props.purchase_request.payment_method = '支付宝支付'
     let responseData = await purchase(props.purchase_request) 
     alipayResponseHtml.value = responseData.data;
     isAliPayOrderExsit.value = true;
-
-    pollOrderStatus(props.purchase_request.order_id)
 }
 
 
@@ -137,16 +134,21 @@ async function pollOrderStatus(order_id: string) {
             
             if (response?.data.message === "success") {
                 console.log("Order status: success");
-                ElMessage.success("支付成功")
-                router.push({ path: '/chat' });
+                ElMessage.success("支付成功");
+                handlePaySuccess()
             } else if (response?.data.message === "continue" && attempts >= 0) {
                 attempts++;
+                if(attempts >= maxAttempts){
+                    ElMessage.warning("等待支付时间过长，页面即将关闭");
+                    setTimeout(() => {closeDialog()}, 3000);
+                    return;
+                }
+
                 sleep_time = attempts * 1000 / 10 > 2000 ? attempts * 1000 / 10 : 2000;
                 console.log(`Order status: continue, attempts times ${attempts}`);
-                // 继续轮询
                 setTimeout(poll, sleep_time);
-            } else {
-                console.log("Order status: max attempts reached or unexpected response");
+            }else {
+                console.log("unexpected response");
                 return;
             }
         } catch (error) {
@@ -155,6 +157,15 @@ async function pollOrderStatus(order_id: string) {
         }
     }
     poll();
+}
+
+
+async function handlePaySuccess(){
+    const user = await getUserInfo();
+    store.dispatch('public_data/setUser', user);
+
+    paymentDialogVisible.value = false;
+    router.push({ path: '/chat' });
 }
 
 </script>

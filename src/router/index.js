@@ -11,7 +11,6 @@ import GPTSCreate from '@/components/GPTSCreate.vue';
 import store from '@/store/index';
 import WechatLogin from '@/components/WechatLogin.vue';
 import FetchTest from '@/components/FetchTest.vue';
-import PaySuccess from '@/components/PaySuccess.vue';
 
 const routes = [{
         path: '/',
@@ -57,11 +56,6 @@ const routes = [{
         path: '/fetch',
         name: 'FetchTest',
         component: FetchTest,
-    },
-    {
-        path: '/paySuccess',
-        name: 'PaySuccess',
-        component: PaySuccess,
     },
 ];
 

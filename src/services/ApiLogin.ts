@@ -128,7 +128,6 @@ export function onLoginSuccess(user:User, access_token:string, refresh_token:str
 
       setUserIdAndTokens(user_id, access_token, refresh_token);
 
-      store.dispatch('public_data/setCurrentUserModelId', user.current_model_id);
       store.dispatch('public_data/setUser', user);
       store.dispatch('public_data/login');
       store.dispatch('public_data/hideLoginDialog');

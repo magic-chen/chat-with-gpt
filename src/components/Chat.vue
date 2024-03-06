@@ -190,7 +190,7 @@ const inputStyle = {
 	lineHeight: 2
 }
 const current_model_id = computed({
-	get: () => store.state.public_data.currentUserModelId,
+	get: () => store.state.public_data.user.current_model_id,
 	set: value => {
 		if (value) {
 			store.dispatch('public_data/setCurrentUserModelId', value);

@@ -144,7 +144,6 @@ async function login() {
 
     if(account.value.pw){
         loginResult = await loginWithAccount(account.value.name, CryptoJS.SHA256(account.value.pw).toString())
-
     }
     if(loginResult){
         closeDialog();
