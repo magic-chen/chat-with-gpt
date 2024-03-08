@@ -114,7 +114,7 @@ function getDiscountText(data: any) {
         discount = data.discount_yearly;
     }
     if (discount === 1.0) {
-        return '畅销中';
+        return 'Hot';
     } else {
         discount *= 10;
     }
@@ -262,7 +262,7 @@ async function goToPayment(product: Product) {
 .deleted-price {
     display: flex;
     justify-content: center;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 400;
     text-decoration: line-through;
 }

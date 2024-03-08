@@ -33,4 +33,5 @@ export const apiConfig = {
 export const maxCardReturn = 10;
 export const maxHoursExpire = 8;
 export const typesConfig = ["文案", "求职", "程序", "产品",  "运营", "外语", "绘画", "其它"]
-export const upgradeUserServiceText = "请升级到更高级服务，解锁更多工具和特色功能。" 
+export const upgradeToPlusText = "升级到Plus，立即解锁更多工具和特色功能"
+export const upgradeToProText = "升级到Pro，即刻享有全部功能和服务"

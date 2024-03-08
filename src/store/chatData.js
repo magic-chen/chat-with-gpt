@@ -35,7 +35,8 @@ export default {
       commit('SET_CHAT_END_STATUS', status)
     },
     setChatLoadingStatus({commit}, status){
-      commit('SET_CHAT_LOADING_STATUS', status)
+      commit('SET_CHAT_LOADING_STATUS', status);
+      console.log(`set chat loading status: ${status}`);
     },
   }
 };

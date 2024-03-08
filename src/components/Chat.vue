@@ -1,8 +1,8 @@
 <template>
 	<el-container class="chat-container">
-		<el-aside :style="{ width: asideWidth }" class="sidebar">
+		<el-aside :style="sidebarStyle" class="sidebar">
 			<div class="header-sidebar">
-				<div class="avatar-icon-text-div" @click="handleNewChatClick">
+				<div class="aside-icon-text-div" @click="handleNewChatClick">
 					<el-avatar :size="30" shape="circle" style="background-color: white">
 						<el-icon class="icon-black">
 							<Promotion />
@@ -10,7 +10,7 @@
 					</el-avatar>
 					<span class="avatar-icon-text">新建聊天</span>
 				</div>
-				<div class="avatar-icon-text-div" @click="handleGoToShop">
+				<div class="aside-icon-text-div" @click="handleGoToShop">
 					<el-avatar :size="30" shape="circle" style="background-color: white">
 						<el-icon class="icon-black">
 							<Grid />
@@ -36,11 +36,14 @@
 				</el-menu>
 			</div>
 
-			<div class="upgrade-div" @click="openProductModal">
+			<div class="aside-footer">
+				<div class="aside-icon-text-div" @click="openProductModal">
 					<ThunderboltFilled style="font-size: 22px; color:yellow"/>
 					<span class="avatar-icon-text">升级你的服务</span>
 					<Product v-model:open="isShowProductModal" />
+				</div>
 			</div>
+			
 		</el-aside>
 
 		<el-container class="chat-panel">
@@ -105,6 +108,9 @@
 										v-model:answer="chat.AI"
 										@update:answer="handleAnswerUpdate($event, index)"></Typewriter>
 									<MarkdownText v-else v-model:text="chat.AI"></MarkdownText>
+									<div v-if="isLoading && chat.AI === 'T'" class="loading-animation-box">
+										<a-spin size="small"/>
+									</div>
 									<div class="answer-text-action">
 										<el-tooltip class="box-item" effect="dark" content="复制内容" placement="bottom"
 											:hide-after=0>
@@ -124,16 +130,12 @@
 										</el-tooltip>
 									</div>
 								</div>
-								<div v-if="isLoading && chat.AI === 'T'" class="loading-animation-box">
-									<a-spin />
-								</div>
 							</div>
 						</div>
-						
 					</div>
 
 					<div class="chat-input-div">
-						<el-icon v-if="current_model_id === 2" class="icon-send-picture">
+						<el-icon v-if="current_model_id === 3" class="icon-send-picture">
 							<PictureFilled />
 						</el-icon>
 						
@@ -148,8 +150,8 @@
 						<el-icon v-if="isLoading" class="icon-send-message" @click="stopChatRequest()">
 							<PauseCircleOutlined />
 						</el-icon>
-						
 					</div>
+					<div class="tips">模型产生的内容可能会出错，重要信息请核实</div>
 
 				</div>
 			</el-main>
@@ -158,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick, provide, watch, computed, inject } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed ,watchEffect} from 'vue'
 import { Conversation, Chat } from '@/types/Conversation';
 import Cookies from 'js-cookie'
 import { getConversations, deleteConversation, CreateOrUpdateConversation } from '@/services/ApiConversations';
@@ -174,29 +176,29 @@ import { connectFetch } from '@/services/ApiFetchChat';
 
 const store = useStore();
 const router = useRouter();
-const activeIndex = ref('0')
-const inputQuestion = ref('')
+const activeIndex = ref('0');
+const inputQuestion = ref('');
 const conversations = ref<Conversation[]>([]);
-const asideWidth = ref('250px');
-const selectedConversation = ref<Conversation[]>([])
+const asideWidth = ref('20%');
+const sidebarStyle = {
+	width: '18%',
+	minWidth: '5%'
+};
+const selectedConversation = ref<Conversation[]>([]);
 const selectedChats = ref<Chat[]>([]);
 const default_conversation_title = "新的对话";
 const inComposition = ref(false);
 const isLoading = computed(() => store.state.chat.is_loading_chat);
 const isShowProductModal = ref(false);
 const inputStyle = {
-	borderRadius: '20px',
-	boxShadow: '0 4px 10px gray',
-	lineHeight: 2
-}
-const current_model_id = computed({
-	get: () => store.state.public_data.user.current_model_id,
-	set: value => {
-		if (value) {
-			store.dispatch('public_data/setCurrentUserModelId', value);
-		}
-	}
-});
+	borderRadius: '15px',
+	backgroundColor: '#f0f4f9',
+	lineHeight: 1.5,
+	minheight: '50px',
+	innerHeight: '50px',
+	boxShadow: '0 0 0 1px #c0c0c0',
+};
+const current_model_id = ref(store.state.public_data.user.current_model_id);
 const user = computed(() => store.state.public_data.user as User);
 
 const userName = computed(() => {
@@ -205,7 +207,7 @@ const userName = computed(() => {
         }else{
             return '';
         }
-    });
+});
 const userAvatar = computed(() => {
 	if(user.value as User){
 		return user.value.avatar as string;
@@ -224,32 +226,32 @@ const avatarBackgroundColor = computed(() => getColorForTitle(userName.value));
 const avatarLogoColor = "black";
 const copied = ref(false);
 
-const current_model_name = ref('')
-provide('current_model_id', current_model_id);
-provide('current_model_name', current_model_name);
+const current_model_name = ref('');
 
-const stopWatch = watch(current_model_id, (newVal, oldVal) => {
-	console.log('Current model ID changed:', newVal);
-	(async () => {
-		try {
-			selectedChats.value = []
-
-			const data = await getConversations(current_model_id.value);
-			conversations.value = data;
-			openChatConversation(undefined)
-
-		} catch (error) {
-			console.error('Error fetching data:', error);
-		}
-	})();
+watchEffect(async () => {
+    try {
+	if(current_model_id !== store.state.public_data.user.current_model_id){
+		current_model_id.value = store.state.public_data.user.current_model_id;
+		
+		initChatPage();
+	}
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    };
 });
 
-onMounted(async () => {
+// onMounted(async () => {
+// 	initChatPage();
+// });
+
+onBeforeUnmount(() => {});
+
+
+async function initChatPage(){
 	try {
 		//1. 获取模型信息
 		const model = await getModelById(current_model_id.value);
 		current_model_name.value = model.name;
-
 
 		//2. 获取对话信息
 		const data = await getConversations(current_model_id.value)
@@ -258,12 +260,7 @@ onMounted(async () => {
 		console.error('Error:', error);
 	}
 	openChatConversation(undefined)
-});
-
-onBeforeUnmount(() => {
-	stopWatch();
-});
-
+}
 
 async function handleNewChatClick() {
 	let newConversation: Conversation = await createNewConversaiton();
@@ -529,6 +526,8 @@ html {
 	flex-direction: column;
 	align-items: flex-start;
 	background-color: black;
+	overflow-x: hidden;
+	height: 100vh;
 }
 
 .header-sidebar {
@@ -544,35 +543,73 @@ html {
 	gap: 5px;
 	background-color: black;
 	cursor: pointer;
+	z-index: 1000;
 }
 
 .chat-history {
 	display: flex;
 	flex : 1;
+	overflow-y: auto;
 	width: 100%;
+
 }
 
-.upgrade-div {
+.aside-footer {
+	width: 100%;
+	height: 50px;
+	background-color: black;
+	z-index: 1000;
+}
+
+.chat-history::-webkit-scrollbar {
+  width: 2px;
+}
+
+.chat-history::-webkit-scrollbar-track {
+  background: black;
+  border-radius: 2px;
+}
+
+.chat-history::-webkit-scrollbar-thumb {
+	background: black;
+  border-radius: 2px;
+  border: 2px solid #f1f1f1;
+}
+
+.chat-history::-webkit-scrollbar-thumb:hover {
+	background: black;
+}
+
+.aside-icon-text-div {
 	display: flex;
+	justify-content: flex-start;
 	align-items: center;
-	width: 96%;
+
+	width: 100%;
 	height: 45px;
-	
-	margin-left: 5px;
 	margin-right: 5px;
-	margin-bottom: 5px;;
+	margin-bottom: 5px;
 	padding-left: 24px;
-	gap: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	gap: 15px;
 	border-radius: 20px;
 	cursor: pointer;
 }
+.aside-icon-text-div:hover {
+	color: #cccccc;
+}
+
+
 
 .avatar-icon-text-div {
 	display: flex;
+	justify-content: flex-start;
 	align-items: center;
+	
 	height: 45px;
 	flex-grow: 1;
-	padding-left: 24px;
+	padding-left: 0px;
 	gap: 15px;
 	width: 100%;
 	border-radius: 20px;
@@ -598,9 +635,7 @@ html {
 	transition: color 0.3s ease;
 }
 
-.avatar-icon-text-div:hover .avatar-icon-text {
-	color: #cccccc;
-}
+
 
 .el-menu--vertical {
  	width: 100%;
@@ -608,8 +643,7 @@ html {
 
 .el-menu .el-menu-item.is-active,
 .el-menu .el-menu-item:hover,
-.avatar-icon-text-div:hover,
-.upgrade-div:hover {
+.aside-icon-text-div:hover {
   background-color: #2e2e2e;
 }
 
@@ -650,13 +684,12 @@ html {
 .chat-panel {
 	display: flex;
 	width: 100%;
-	height: calc(100vh - 95px);
+	height: calc(100vh - 110px);
 	overflow-y: auto;
 }
 .chat-content {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
 	align-items: center;
 	height: 100%;
 	padding: 0;
@@ -679,11 +712,14 @@ html {
 
 
 .chat-panel-middle {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
 	min-height: 100px;
 	height: 100%;
-	max-width: 650px;
-	min-width: 650px;
+	width: 50%;
 }
+
 
 .chat-panel-middle::-webkit-scrollbar {
 	display: none;
@@ -701,11 +737,33 @@ html {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
+	align-self: center;
+	justify-content: center;
 	gap: 15px;
 	position: fixed;
-	bottom: 30px;
-	min-width: 690px;
+	bottom: 40px;
+	width: 45%;
+	margin-left: 120px;
 }
+
+.chat-input {
+	border-radius: 11px;
+	overflow-y: hidden;
+	padding: 0px;
+}
+
+:deep(.el-textarea__inner){
+	padding-top: 15px;
+	padding-bottom: 15px;
+	min-height: 50px !important; /*输入行高度大概20px*/
+	background-color: #f0f4f9 !important;
+}
+
+:deep(.el-textarea__inner:focus){
+	box-shadow: 0 0 0 3px red !important;
+	background-color: #e5e9ef !important;
+}
+
 
 .icon-send-picture {
 	color: var(--gray-600);
@@ -727,11 +785,7 @@ html {
 	color: royalblue;
 }
 
-.chat-input {
-	border-radius: 20px;
-	overflow-y: hidden;
-	padding: 0px;
-}
+
 
 .edit-question-div{
 	display: flex;
@@ -821,5 +875,21 @@ html {
 .loading-animation-box {
 	min-height: 20px;
 	margin-top: 5px;
-	margin-left: 40px;
-}</style>
+	/* margin-left: 40px; */
+}
+
+.tips {
+	
+	display: flex;
+	align-items: center;
+	align-self: center;
+	justify-content: center;
+	font-size: 12px;
+	font-weight: 200;
+	color: #444746;
+	bottom: 10px;
+	position: fixed;
+	width: 50%;
+}
+
+</style>

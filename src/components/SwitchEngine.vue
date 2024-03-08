@@ -20,44 +20,64 @@
       </a-button>
     </a-dropdown>
 	</div>
-	
 </template>
 
 
 <script setup lang="ts" >
-	import { ref, inject, nextTick, computed, h } from 'vue';
+	import { ref, nextTick, computed, h, onMounted } from 'vue';
     import { useStore } from 'vuex';
 	import { DownOutlined, CheckCircleFilled } from '@ant-design/icons-vue';
 	import { updateModelEngine } from '@/services/ApiUser';
-	import { ElMessage } from 'element-plus';
-	import { upgradeUserServiceText } from '@/config';
+	import { useRouter } from 'vue-router';
+	import { showUpgradeMessage } from '@/utils/utils';
 
+	onMounted (()=>{
+		console.log(`switch onmounted:`, JSON.stringify(store.state.public_data.user))
+		current_model_engine_id = ref(store.state.public_data.user.current_engine_model_id);
+
+		console.log(`uopdate current_model_engine_id to ${current_model_engine_id.value}`);
+	})
+
+    const router = useRouter();
 	const model_engine_id_name_mapping: Record<number, string>  = {
 		0: '默认引擎',
 		1: 'GPT-3.5',
 		2: 'GPT-4.0',
 	}
+	const model_engine_id_model_id_mapping: Record<number, number>  = {
+		0: 1,
+		1: 2,
+		2: 3,
+	}
+
 	const store = useStore();
 	const user = store.state.public_data.user;
-	const current_model_engine_id = ref(user.current_model_engine_id);
-	const current_model_engine_name = computed(() => {
-
-		return model_engine_id_name_mapping[current_model_engine_id.value];
-	})
+	let current_model_engine_id = ref(store.state.public_data.user.current_engine_model_id);
+	const current_model_engine_name = ref(model_engine_id_name_mapping[current_model_engine_id.value]);
 	
 	async function handleItemClicked(event:any){
 		const target_model_engine_id =  Number(event.key) -1;
-		console.log(`切换到 target_model_engine_id : ${target_model_engine_id}`)
 		const result = await updateModelEngine(target_model_engine_id);
+		const target_model_id = model_engine_id_model_id_mapping[target_model_engine_id];
+
 		if (result === 200){
 			current_model_engine_id.value = target_model_engine_id;
+			current_model_engine_name.value = model_engine_id_name_mapping[current_model_engine_id.value];
+			
 			user.current_model_engine_id = target_model_engine_id;
 			store.dispatch('public_data/setUser', user);
-		}else if(result === 404){
-			ElMessage.warning(upgradeUserServiceText);
+
+			console.log(`用户当前的model id是：${user.current_model_id}, 要切换到的model id是：${target_model_id}`)
+
+			if(Object.values(model_engine_id_model_id_mapping).includes(user.current_model_id) &&
+			   user.current_model_id !== target_model_id){
+				store.dispatch('public_data/setCurrentUserModelId', target_model_id);
+        		router.push({ path: '/chat'});
+			}
+
+		}else if(result === 201){
+			return showUpgradeMessage(target_model_engine_id)
 		}
-	
-		console.log(`Item clicked:, ${current_model_engine_id.value}, ${current_model_engine_name.value}`);
 	}
 </script>
 

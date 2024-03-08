@@ -1,10 +1,12 @@
 
 import { sendSms } from '@/services/ApiSendSms';
 import CryptoJS from 'crypto-js';
+import store from '@/store';
 import { ElMessage } from 'element-plus';
 import Cookies from 'js-cookie';
 import MarkdownIt from 'markdown-it'
 import { ref } from 'vue';
+import { upgradeToPlusText, upgradeToProText } from '@/config';
 
 const colors = [
 	"#F2994A", // 活力橙色
@@ -93,6 +95,17 @@ export async function getVerifyCode(event:any, phoneNumber:string, countdown:any
       }
 
   }
+}
+
+export function showUpgradeMessage(target_model_engine_id:number){
+  if(store.state.public_data.user.user_service_level_id < 2 && target_model_engine_id === 1){
+    ElMessage.warning(upgradeToPlusText);
+    return true;
+  }else if(store.state.public_data.user.user_service_level_id < 3 && target_model_engine_id === 2){
+      ElMessage.error(upgradeToProText);
+      return true;
+  }
+  return false;
 }
 
 export {getColorForTitle, scrollToBottom, renderMarkdown, clearLoginData, generateRandomNumber, convertFourDigitsToTwoLetters}

@@ -19,7 +19,7 @@
                     
                 </div>
                 <div v-if="isShowLoginInfo" class="login-info-div">
-                    <a-button type="text" class="login-info-button" :icon="h(SettingOutlined)">设置</a-button>
+                    <!-- <a-button type="text" class="login-info-button" :icon="h(InfoCircleOutlined)">个人信息</a-button> -->
                     <a-button type="text" class="login-info-button" :icon="h(LogoutOutlined)" @click="logout">登出</a-button>
             </div>
                 
@@ -36,7 +36,7 @@
 <script setup lang="ts">
     import { ref, onMounted, computed, reactive, h } from 'vue';
     import { useStore } from 'vuex';
-    import { SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
+    import { SettingOutlined, InfoCircleOutlined, LogoutOutlined } from '@ant-design/icons-vue';
     import { clearLoginData, convertFourDigitsToTwoLetters, getColorForTitle } from '@/utils/utils';
     import { useRouter } from 'vue-router';
     import { User } from '@/types/User';

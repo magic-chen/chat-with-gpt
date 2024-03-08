@@ -87,13 +87,17 @@ function setupFetchEventSource(options: any) {
     ...options,
     onopen: () => {
       console.log(`FETCH 连接成功<br />`);
-      store.dispatch("chat/setChatLoadingStatus", false)
+      // store.dispatch("chat/setChatLoadingStatus", false)
     },
     onclose: () => {
       console.log(`FETCH 连接关闭<br />`);
       closeSSE();
     },
     onmessage: (event: any) => {
+      if(store.state.chat.is_loading_chat === true){
+        store.dispatch("chat/setChatLoadingStatus", false)
+
+      }
       // console.log("dispatch add message event")
       store.dispatch('chat/addMessage', event as string);
     },
@@ -155,7 +159,7 @@ async function waitForMessagesEmpty() {
 
 export const closeSSE = async () => {
   await waitForMessagesEmpty();
-  store.dispatch('chat/setChatIsEndStatus', false);
+  await store.dispatch('chat/setChatIsEndStatus', false);
 
   if (controller) {
     controller.abort();

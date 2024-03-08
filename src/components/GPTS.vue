@@ -4,23 +4,7 @@
             <div class="logo">
                 <img src="/src/assets/company_logo.png">
             </div>
-            <!-- <div class="login-logout-container">
-                <div class="login-logout-div">
-                    <div v-if="isLogin" class="login-div" >
-                        <el-avatar :size="35" shape="circle" style="background-color: green; color: white;">
-                            AB
-                        </el-avatar>
-                        <a-button type="text" style="color: white; padding: 5px;" @click="showLoginInfo">已登录</a-button>
-                    </div>
-                    <div v-else>
-                        <el-button type="success" @click="clickLogin">登录</el-button>
-                    </div>
-                </div>
-                <div v-if="isShowLoginInfo" class="login-info-div">
-                    <a-button  type="text" class="login-info-button" :icon="h(SettingOutlined)">设置</a-button>
-                    <a-button  type="text" class="login-info-button" :icon="h(LogoutOutlined)" @click="logout">登出</a-button>
-                </div>
-            </div> -->
+           
             <LoginLogout bgColor="black" :style="{ position: 'absolute', top: '5px', right: '15px',  minHeight: '50px' }"></LoginLogout>
             <el-carousel class="el-carousel" :interval=9000>
                 <el-carousel-item v-for="image in images" :key="image">
@@ -45,23 +29,28 @@
                     <div class="card-list" v-infinite-scroll="loadMoreModels" :infinite-scroll-disabled="!shouldLoadMore"
                         style="overflow: auto">
                         <div v-if="tab==='我的'" class="card">
-                            <div class="create-new-card">
+                                <div class="create-new-card">
                                 <el-button type="primary" @click="createNewModel">新建模型</el-button>
-                            </div>
+                                </div>                            
                         </div>
 
                         <div v-for="card in filteredCards" :key="card.name" class="card">
-                            <div class="card-top" @click="onChatClick(card)">
-                                <el-avatar class="card-avatar" :size="50" shape="circle"
-                                    :style="{ backgroundColor: getColorForTitle(card.name) }">
-                                    <img :size="40" :src="card.icon ? card.icon : card.src"
-                                        :style="card.icon ? 'width: 50%; height: 50%;object-fit: cover;' : 'width: 110%; height: 110%;object-fit: cover;'" />
-                                </el-avatar>
-                                <div class="card-details">
-                                    <h3 class="card-title">{{ card.name }}</h3>
-                                    <p class="card-description">{{ card.description }}</p>
+                                <div class="card-top" @click="onChatClick(card)">
+                                    <el-avatar class="card-avatar" :size="50" shape="circle"
+                                        :style="{ backgroundColor: getColorForTitle(card.name) }">
+                                        <img :size="40" :src="card.icon ? card.icon : card.src"
+                                            :style="card.icon ? 'width: 50%; height: 50%;object-fit: cover;' : 'width: 110%; height: 110%;object-fit: cover;'" />
+                                    </el-avatar>
+                                    <a-badge-ribbon class="ribon" v-if="card.id === 2" text="Plus专享" :color="'#1b7f64'">
+                                    </a-badge-ribbon>
+                                    <a-badge-ribbon class="ribon" v-if="card.id === 3" text="Pro专享" :color="'#b8860b'">
+                                    </a-badge-ribbon>
+
+                                    <div class="card-details">
+                                        <h3 class="card-title">{{ card.name }}</h3>
+                                        <p class="card-description">{{ card.description }}</p>
+                                    </div>
                                 </div>
-                            </div>
                             <div class="card-icons">
                                 <a-space v-if="card.publish_type === 'public' && card.is_favorite">
                                     <StarFilled style="color: #FFD700; font-size: 20px;" @click="onStarClick(card)" />
@@ -78,6 +67,7 @@
                                         @click="onDeleteClick(card)" />
                                 </a-space>
                             </div>
+                            
                         </div>
                         <div v-if="loading">
                             <a-spin size="small" />
@@ -121,15 +111,16 @@
     import { ref, onMounted, computed, reactive, h, onUnmounted } from 'vue';
     import { getModels, deleteModel, } from '@/services/ApiModel';
     import { deleteUserModel, getUserModels, setModelFavorite } from '@/services/ApiUserModel';
-    import { maxCardReturn, typesConfig, upgradeUserServiceText } from '@/config';
+    import { maxCardReturn, typesConfig } from '@/config';
     import { Model } from '@/types/Model';
     import { StarFilled, StarOutlined, FormOutlined, DeleteOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
     import { useRouter } from 'vue-router';
-    import { clearLoginData, getColorForTitle } from '@/utils/utils';
+    import { clearLoginData, getColorForTitle, showUpgradeMessage } from '@/utils/utils';
     import image1 from '@/assets/prompt_bg2.webp';
     import image2 from '@/assets/prompt_bg2.webp';
     import { useStore } from 'vuex';
     import { ElMessage } from 'element-plus';
+import { updateModelEngine } from '@/services/ApiUser';
 
     const images = ref([image1, image2]);
     const router = useRouter();
@@ -157,6 +148,7 @@
     const shouldLoadMore = ref(true);
     const offset = ref(0);
     const tabs = ref(['我的', '全部', '收藏', ...typesConfig]);
+	const user = store.state.public_data.user;
 
     const cards = reactive<Model[]>([]);
     const userCards = reactive<Model[]>([]);
@@ -248,6 +240,10 @@
     }
 
     function createNewModel() {
+        const target_model_engine_id = 2;
+        if(showUpgradeMessage(target_model_engine_id)){
+            return;
+        }
         router.push({ path: '/GPTS/create' })
     }
 
@@ -265,22 +261,29 @@
         removeCardById(card.id)
     }
 
-    function onChatClick(card : Model) {
-        // console.log(`click card ${card.id}`)
+    async function onChatClick(card : Model) {
         if(!isLogin.value){
             store.dispatch('public_data/showLoginDialog');
         }
-
-        if(store.state.public_data.user.user_service_level_id < 2 && card.id == 1){
-            ElMessage.warning(upgradeUserServiceText);
-            return;
-        }else if(store.state.public_data.user.user_service_level_id < 3 && card.id == 2){
-            ElMessage.warning(upgradeUserServiceText);
+        const target_model_engine_id = Number(card.id - 1);
+        console.log(`target model engine id is: ${target_model_engine_id}`)
+        if(target_model_engine_id >= 3){
+            router.push({ path: '/chat'});
             return;
         }
 
-        store.dispatch('public_data/setCurrentUserModelId', card.id)
-        router.push({ path: '/chat'});
+        const result = await updateModelEngine(target_model_engine_id);
+        if(result === 200){
+            user.current_model_id = card.id;
+            user.current_engine_model_id = target_model_engine_id;
+            await store.dispatch('public_data/setUser', user);
+            console.log(JSON.stringify(store.state.public_data.user))
+            router.push({ path: '/chat'});
+
+            return;
+        }else{
+            return showUpgradeMessage(target_model_engine_id)
+        }   
     }
 
     async function onStarClick(card : Model) {
@@ -436,6 +439,7 @@
         display: flex;
         align-items: center;
         cursor: pointer;
+        position: relative;
     }
 
     .card-avatar {
@@ -482,6 +486,12 @@
         color: var(--gray-300);
     }
 
+    ::v-deep(.ant-ribbon-placement-end){
+        width: 70px;
+        left: 95px;
+        top: -25px;
+    }
+
     .main-page-footer{
         display: flex;
         flex-direction: column;
@@ -491,7 +501,7 @@
         height: 200px;
         color: #8f8f8f;
         font-size: 12px;
-        a {
+        :is(a) {
             color: #8f8f8f;
         }
     }
@@ -536,7 +546,7 @@
         font-size: 15px;
         margin-top: 5px;
         margin-bottom: 5px;
-        a {
+        :is(a){
             text-decoration: none;
             color: inherit; /* 保持链接的默认颜色 */
         }
@@ -550,7 +560,7 @@
         margin-bottom: 5px;
         font-size: 13px;
         font-weight: 400;
-        a {
+        :is(a) {
             text-decoration: none;
             color: inherit; /* 保持链接的默认颜色 */
         }
