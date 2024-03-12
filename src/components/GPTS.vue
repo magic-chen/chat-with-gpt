@@ -1,5 +1,5 @@
 <template>
-    <el-container>
+    <el-container class="main-page-container">
         <el-header class="el-header">
             <div class="logo">
                 <img src="/src/assets/company_logo.png">
@@ -24,10 +24,9 @@
                 </template>
             </el-autocomplete>
 
-            <el-tabs class="el-tabs" v-model="activeTab" @tab-click="onTabClick">
+            <el-tabs class="el-tabs-div" v-model="activeTab" @tab-click="onTabClick">
                 <el-tab-pane v-for="tab in tabs" :key="tab" :label="tab" :name="tab">
-                    <div class="card-list" v-infinite-scroll="loadMoreModels" :infinite-scroll-disabled="!shouldLoadMore"
-                        style="overflow: auto">
+                    <div class="card-list" v-infinite-scroll="loadMoreModels" :infinite-scroll-disabled="!shouldLoadMore" :infinite-scroll-distance="10">
                         <div v-if="tab==='我的'" class="card">
                                 <div class="create-new-card">
                                 <el-button type="primary" @click="createNewModel">新建模型</el-button>
@@ -75,7 +74,7 @@
                     </div>
                 </el-tab-pane>
             </el-tabs>
-
+            
         </el-main>
         <el-footer class="main-page-footer">
             <div class="contact">
@@ -84,7 +83,6 @@
                     <div class="hover-content">
                         <img src="/src/assets/wechat_qrcode.jpg" alt="二维码">
                     </div>
-                
                 </div>
                 
                 <img width="50" height="50" src="/src/assets/email.svg"/>
@@ -113,14 +111,13 @@
     import { deleteUserModel, getUserModels, setModelFavorite } from '@/services/ApiUserModel';
     import { maxCardReturn, typesConfig } from '@/config';
     import { Model } from '@/types/Model';
-    import { StarFilled, StarOutlined, FormOutlined, DeleteOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue';
+    import { StarFilled, StarOutlined, FormOutlined, DeleteOutlined } from '@ant-design/icons-vue';
     import { useRouter } from 'vue-router';
-    import { clearLoginData, getColorForTitle, showUpgradeMessage } from '@/utils/utils';
+    import { getColorForTitle, showUpgradeMessage } from '@/utils/utils';
     import image1 from '@/assets/prompt_bg2.webp';
     import image2 from '@/assets/prompt_bg2.webp';
     import { useStore } from 'vuex';
-    import { ElMessage } from 'element-plus';
-import { updateModelEngine } from '@/services/ApiUser';
+    import { updateModelEngine } from '@/services/ApiUser';
 
     const images = ref([image1, image2]);
     const router = useRouter();
@@ -148,7 +145,6 @@ import { updateModelEngine } from '@/services/ApiUser';
     const shouldLoadMore = ref(true);
     const offset = ref(0);
     const tabs = ref(['我的', '全部', '收藏', ...typesConfig]);
-	const user = store.state.public_data.user;
 
     const cards = reactive<Model[]>([]);
     const userCards = reactive<Model[]>([]);
@@ -265,25 +261,24 @@ import { updateModelEngine } from '@/services/ApiUser';
         if(!isLogin.value){
             store.dispatch('public_data/showLoginDialog');
         }
-        const target_model_engine_id = Number(card.id - 1);
-        console.log(`target model engine id is: ${target_model_engine_id}`)
-        if(target_model_engine_id >= 3){
-            router.push({ path: '/chat'});
-            return;
+        let target_model_id = Number(card.id);
+        let target_model_engine_id = store.state.public_data.user.current_model_engine_id;
+
+        console.log(`target model id is: ${target_model_id}`);
+        if(target_model_id <= 3){
+            target_model_engine_id = target_model_id -1;
+            const result = await updateModelEngine(target_model_engine_id);
+            if(result !== 200){
+                return showUpgradeMessage(target_model_engine_id);
+            }
         }
 
-        const result = await updateModelEngine(target_model_engine_id);
-        if(result === 200){
-            user.current_model_id = card.id;
-            user.current_engine_model_id = target_model_engine_id;
-            await store.dispatch('public_data/setUser', user);
-            console.log(JSON.stringify(store.state.public_data.user))
-            router.push({ path: '/chat'});
+        await store.dispatch('public_data/setCurrentUserModelEngineId', target_model_engine_id);
+        await store.dispatch('public_data/setCurrentUserModelId', target_model_id);
 
-            return;
-        }else{
-            return showUpgradeMessage(target_model_engine_id)
-        }   
+        console.log(JSON.stringify(store.state.public_data.user));
+        router.push({ path: '/chat'});
+        return;
     }
 
     async function onStarClick(card : Model) {
@@ -332,10 +327,16 @@ import { updateModelEngine } from '@/services/ApiUser';
 </script>
 
 <style scoped>
+    .main-page-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
     .el-header {
         background-color: black;
         width: 100%;
-        height: 300px;
+        height: 33%;
+        max-height: 300px;
         padding: 0px;
         position: relative;
     }
@@ -367,14 +368,19 @@ import { updateModelEngine } from '@/services/ApiUser';
         color: var(--gray-400);
     }
 
+    
+
     .el-main {
         width: 850px;
         min-height: 800px;
-        padding-bottom: 0;
-        margin: auto;
+        height: 100%;
         display: flex;
+        flex-grow: 1;
         flex-direction: column;
+        justify-content: flex-start;
         align-items: center;
+        align-self: center;
+        z-index: 9;
     }
 
     ::v-deep(.el-autocomplete), .search-box{
@@ -397,18 +403,25 @@ import { updateModelEngine } from '@/services/ApiUser';
 
     ::v-deep(.el-tabs) {
         width: 100%;
+        overflow: hidden;
     }
     ::v-deep(.el-tabs__item){
         color: var(--gray-500);
+    }
+
+    .el-tabs-div {
+        
     }
 
     .card-list {
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
+        height: 600px;
         gap: 25px;
         padding: 10px;
         overflow-y: auto;
+        overflow-x: hidden;
     }
 
     .create-new-card {
@@ -433,6 +446,7 @@ import { updateModelEngine } from '@/services/ApiUser';
         padding: 10px;
         box-sizing: border-box;
         min-height: 100px;
+        max-height: 110px;
     }
 
     .card-top {
@@ -499,6 +513,7 @@ import { updateModelEngine } from '@/services/ApiUser';
         align-items: center;
         background-color: #404444;
         height: 200px;
+        width: 100%;
         color: #8f8f8f;
         font-size: 12px;
         :is(a) {

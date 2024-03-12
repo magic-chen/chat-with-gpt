@@ -12,11 +12,12 @@ export default {
   mutations: {
     setCurrentUserModelId(state, value) { 
       state.user.current_model_id = value;
-      // console.log('set current model id to ', value)
+    },
+    setCurrentUserModeEnginelId(state, value) { 
+      state.user.current_model_engine_id = value;
     },
     setUser(state, value) { 
       state.user = value;
-      // console.log('set user to ', value)
     },
     setCurrentModel(state, Model) {
       state.currentModel = Model;
@@ -31,6 +32,9 @@ export default {
   actions: {
     setCurrentUserModelId({ commit }, value) {
       commit('setCurrentUserModelId', value);
+    },
+    setCurrentUserModelEngineId({ commit }, value) {
+      commit('setCurrentUserModeEnginelId', value);
     },
     getCurrentUserModelId({ state }) {
       return state.user.current_model_id;

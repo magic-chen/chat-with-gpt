@@ -32,10 +32,10 @@
 	import { showUpgradeMessage } from '@/utils/utils';
 
 	onMounted (()=>{
-		console.log(`switch onmounted:`, JSON.stringify(store.state.public_data.user))
-		current_model_engine_id = ref(store.state.public_data.user.current_engine_model_id);
-
-		console.log(`uopdate current_model_engine_id to ${current_model_engine_id.value}`);
+		// console.log(`switch onmounted:`, JSON.stringify(store.state.public_data.user))
+		current_model_engine_id = store.state.public_data.user.current_model_engine_id;
+		current_model_engine_name.value = model_engine_id_name_mapping[current_model_engine_id];
+		// console.log(`uopdate current_model_engine_id to ${current_model_engine_id}`);
 	})
 
     const router = useRouter();
@@ -51,9 +51,9 @@
 	}
 
 	const store = useStore();
-	const user = store.state.public_data.user;
-	let current_model_engine_id = ref(store.state.public_data.user.current_engine_model_id);
-	const current_model_engine_name = ref(model_engine_id_name_mapping[current_model_engine_id.value]);
+	// const user = store.state.public_data.user;
+	let current_model_engine_id = store.state.public_data.user.current_model_engine_id;
+	let current_model_engine_name = ref(model_engine_id_name_mapping[current_model_engine_id]);
 	
 	async function handleItemClicked(event:any){
 		const target_model_engine_id =  Number(event.key) -1;
@@ -61,16 +61,15 @@
 		const target_model_id = model_engine_id_model_id_mapping[target_model_engine_id];
 
 		if (result === 200){
-			current_model_engine_id.value = target_model_engine_id;
-			current_model_engine_name.value = model_engine_id_name_mapping[current_model_engine_id.value];
-			
-			user.current_model_engine_id = target_model_engine_id;
-			store.dispatch('public_data/setUser', user);
+			// console.log(`用户当前的model engine id是：${current_model_engine_id}, 要切换到的model engine id是：${target_model_engine_id}`)
 
-			console.log(`用户当前的model id是：${user.current_model_id}, 要切换到的model id是：${target_model_id}`)
+			current_model_engine_id = target_model_engine_id;
+			current_model_engine_name.value = model_engine_id_name_mapping[current_model_engine_id];
+			store.dispatch('public_data/setCurrentUserModelEngineId', target_model_engine_id);
 
-			if(Object.values(model_engine_id_model_id_mapping).includes(user.current_model_id) &&
-			   user.current_model_id !== target_model_id){
+
+			if(Object.values(model_engine_id_model_id_mapping).includes(target_model_id)){
+				// console.log(`redirect to page ${model_engine_id_name_mapping[current_model_engine_id]}`)
 				store.dispatch('public_data/setCurrentUserModelId', target_model_id);
         		router.push({ path: '/chat'});
 			}
